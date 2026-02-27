@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="poem_themes">
+        <item>思想</item>
+        <item>爱国</item>
+        <item>离别</item>
+        <item>送别</item>
+        <item>励志</item>
+        <item>其他</item>
+    </string-array>
+</resources> 

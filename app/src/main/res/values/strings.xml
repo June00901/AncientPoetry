@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">中国古诗词</string>
+
+    <string name="tab_home">首页</string>
+    <string name="tab_find">古诗</string>
+    <string name="tab_community">创作</string>
+    <string name="tab_me">我的</string>
+    <string name="tab_ai_helper">AI</string>
+
+    <string name="tvTitle">用户登录</string>
+    <string name="tvUid">账 号：</string>
+    <string name="tvPwd">密 码：</string>
+    <string name="btnLogin">登录</string>
+    <string name="btnReg">注册</string>
+    <string name="cbRemember">记住我</string>
+
+
+
+</resources>

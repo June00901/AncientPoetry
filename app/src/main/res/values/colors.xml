@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#FF018786</color>
+    <color name="colorPrimaryDark">#FF018786</color>
+    <color name="colorAccent">#03DAC5</color>
+
+    <color name="white">#ffffff</color>
+    <color name="tab_text_normal">#000000</color>
+    <color name="tab_text_selected">#FF018786</color>
+
+    <color name="black">#000000</color>
+    <color name="text_selector">#3da3e0</color>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF018786</color>
+    <color name="purple_700">#FF018786</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="xml_color">#FAFAFA</color>
+    <color name="mTbhost_coloe">#F4F4F4</color>
+    <color name="textcolorhint">#8D8D8D</color>
+    <color name="editcolor">#F5F5F5</color>
+    <color name="CheckBoxColor">#6E6E6E</color>
+    <color name="blue">#0000FF</color>
+</resources>

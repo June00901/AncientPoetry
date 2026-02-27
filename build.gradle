@@ -1,0 +1,33 @@
+buildscript {
+    repositories {
+        // 1. 优先加阿里云镜像（能找到旧版banner/qmui）
+        maven { url 'https://maven.aliyun.com/nexus/content/repositories/jcenter/' }
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        // 2. 保留原有仓库（备用）
+        google()
+        mavenCentral()
+        // 注意：jcenter() 不用加，用阿里云的jcenter镜像替代
+    }
+    dependencies {
+        classpath "com.android.tools.build:gradle:4.2.2"
+
+    }
+}
+
+allprojects {
+    repositories {
+        // 关键：加这几个仓库，专门找旧版第三方库
+        maven { url 'https://maven.aliyun.com/nexus/content/repositories/jcenter/' }
+        maven { url 'https://jitpack.io' }
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        // 保留原有仓库
+        google()
+        mavenCentral()
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}

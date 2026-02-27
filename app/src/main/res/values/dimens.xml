@@ -1,0 +1,7 @@
+<resources>
+
+    <dimen name="tabbar_height">72dp</dimen>
+    <dimen name="left1">30sp</dimen>
+    <dimen name="txtsize">18sp</dimen>
+
+</resources>
