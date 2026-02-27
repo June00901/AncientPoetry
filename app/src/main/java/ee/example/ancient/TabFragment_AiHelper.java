@@ -12,6 +12,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
 import ee.example.ancient.utils.PoemApiClient;
 
@@ -20,6 +21,7 @@ public class TabFragment_AiHelper extends Fragment {
     private EditText etEmotion;
     private Button btnMatch;
     private TextView tvResult;
+    private AiHelperViewModel viewModel;
 
     private PoemApiClient poemApiClient;
     private Handler mainHandler;
@@ -32,6 +34,26 @@ public class TabFragment_AiHelper extends Fragment {
         etEmotion = view.findViewById(R.id.et_emotion);
         btnMatch = view.findViewById(R.id.btn_match);
         tvResult = view.findViewById(R.id.tv_result);
+
+        // 初始化ViewModel
+        viewModel = new ViewModelProvider(this, new ViewModelProvider.NewInstanceFactory()).get(AiHelperViewModel.class);
+
+        // 观察结果数据
+        viewModel.getResultText().observe(getViewLifecycleOwner(), text -> {
+            tvResult.setText(text);
+        });
+
+        viewModel.getIsLoading().observe(getViewLifecycleOwner(), loading -> {
+            btnMatch.setEnabled(!loading);
+        });
+
+        // 恢复之前的结果
+        String savedResult = viewModel.getResultText().getValue();
+        if (savedResult != null && !savedResult.isEmpty()) {
+            tvResult.setText(savedResult);
+        } else {
+            tvResult.setText("请输入情感或主题，点击匹配获取诗词推荐");
+        }
 
         // 初始化API客户端
         poemApiClient = new PoemApiClient();
@@ -55,10 +77,9 @@ public class TabFragment_AiHelper extends Fragment {
 
     private void matchPoemByEmotion(String emotion) {
         // 显示加载中
-        tvResult.setText("🔍 正在从千年诗库中寻觅「" + emotion + "」...\n⏳ 请稍候（约5-8秒）");
-        btnMatch.setEnabled(false);
+        viewModel.setResultText("🔍 正在从千年诗库中寻觅「" + emotion + "」...\n⏳ 请稍候（约5-8秒）");
+        viewModel.setLoading(true);
 
-        // 优化后的prompt，强化文笔要求，加入具体例句示范
         String prompt = "你是一位高考作文满分得主、著名散文家、古诗词研究专家。\n"
                 + "用户需要一首表达'" + emotion + "'情感或哲理的中国古诗词。\n\n"
                 + "【核心要求】\n"
@@ -89,18 +110,17 @@ public class TabFragment_AiHelper extends Fragment {
                 + "月光如水，流淌千年，却流不走游子心头那抹淡淡的乡愁。』\n\n"
                 + "请用类似的文采为'" + emotion + "'主题创作一个例句。";
 
-        // 调用API
         poemApiClient.callApiWithPrompt(prompt, new PoemApiClient.PoemCallback() {
             @Override
             public void onSuccess(String poem) {
-                tvResult.setText(poem);
-                btnMatch.setEnabled(true);
+                viewModel.setResultText(poem);
+                viewModel.setLoading(false);
             }
 
             @Override
             public void onError(String error) {
-                tvResult.setText("寻觅失败，请稍后重试。\n\n错误信息：" + error);
-                btnMatch.setEnabled(true);
+                viewModel.setResultText("寻觅失败，请稍后重试。\n\n错误信息：" + error);
+                viewModel.setLoading(false);
                 Toast.makeText(getActivity(), "API调用失败", Toast.LENGTH_SHORT).show();
             }
         });

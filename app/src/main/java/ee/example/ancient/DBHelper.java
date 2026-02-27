@@ -17,7 +17,7 @@ import java.io.OutputStream;
 
 public class DBHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "ancient_poetry.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;  // 升级版本号，触发onUpgrade
     private Context context;
 
     public DBHelper(Context context) {
@@ -27,7 +27,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        // 创建笔记表
+        // 创建笔记表（原有的）
         db.execSQL("CREATE TABLE IF NOT EXISTS note (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "title TEXT," +
@@ -35,16 +35,26 @@ public class DBHelper extends SQLiteOpenHelper {
                 "translation TEXT," +
                 "create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
                 ")");
-                
-        // 创建其他必要的表...
+
+        // 新增：创建诗词表
+        db.execSQL("CREATE TABLE IF NOT EXISTS poems (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "title TEXT," +
+                "author TEXT," +
+                "content TEXT," +
+                "dynasty TEXT)");
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        // 如果需要升级数据库结构，在这里处理
-        if (oldVersion < newVersion) {
-            db.execSQL("DROP TABLE IF EXISTS note");
-            onCreate(db);
+        // 如果旧版本是1，新版本是2，需要添加诗词表
+        if (oldVersion < 2) {
+            db.execSQL("CREATE TABLE IF NOT EXISTS poems (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    "title TEXT," +
+                    "author TEXT," +
+                    "content TEXT," +
+                    "dynasty TEXT)");
         }
     }
 
@@ -90,4 +100,4 @@ public class DBHelper extends SQLiteOpenHelper {
         myOutput.close();
         myInput.close();
     }
-} 
+}
