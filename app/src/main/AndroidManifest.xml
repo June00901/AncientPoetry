@@ -65,6 +65,7 @@
         <activity
             android:name=".activity.AddNoteActivity"
             android:label="添加笔记" />
+        <activity android:name=".AiQAActivity" />
     </application>
 
 </manifest>

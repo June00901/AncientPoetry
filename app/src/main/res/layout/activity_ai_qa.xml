@@ -9,28 +9,29 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="输入情感/主题："
-        android:textSize="18sp"
+        android:text="AI诗词问答"
+        android:textSize="24sp"
+        android:textStyle="bold"
         android:textColor="#000000"
-        android:textStyle="bold"/>
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="20dp"/>
 
     <EditText
-        android:id="@+id/et_emotion"
+        android:id="@+id/et_question"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
         android:background="@drawable/edit_text_background"
         android:padding="12dp"
-        android:hint="例如：思乡、壮志未酬、物是人非、春日"
+        android:hint="请输入你的问题（例如：静夜思表达了什么情感？）"
         android:textSize="16sp"
-        android:maxLines="1"
-        android:inputType="text"/>
+        android:maxLines="3"
+        android:inputType="textMultiLine"/>
 
     <Button
-        android:id="@+id/btn_match"
+        android:id="@+id/btn_ask"
         android:layout_width="wrap_content"
         android:layout_height="48dp"
-        android:text="匹配经典诗词"
+        android:text="提问"
         android:textSize="16sp"
         android:layout_marginTop="20dp"
         android:layout_gravity="center_horizontal"
@@ -38,20 +39,7 @@
         android:textColor="#FFFFFF"
         android:paddingStart="30dp"
         android:paddingEnd="30dp"/>
-    <Button
-        android:id="@+id/btn_qa"
-        android:layout_width="wrap_content"
-        android:layout_height="48dp"
-        android:text="AI问答助手"
-        android:textSize="16sp"
-        android:layout_marginTop="10dp"
-        android:layout_gravity="center_horizontal"
-        android:background="@drawable/button_background"
-        android:textColor="#FFFFFF"
-        android:paddingStart="30dp"
-        android:paddingEnd="30dp"/>
 
-    <!-- 用ScrollView包裹TextView，实现滚动效果 -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -62,11 +50,12 @@
         android:scrollbars="vertical">
 
         <TextView
-            android:id="@+id/tv_result"
+            android:id="@+id/tv_answer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="16sp"
             android:textColor="#333333"
             android:lineSpacingExtra="4dp"/>
     </ScrollView>
+
 </LinearLayout>

@@ -1,5 +1,6 @@
 package ee.example.ancient;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -20,6 +21,7 @@ public class TabFragment_AiHelper extends Fragment {
 
     private EditText etEmotion;
     private Button btnMatch;
+    private Button btnQa;  // 新增：AI问答按钮
     private TextView tvResult;
     private AiHelperViewModel viewModel;
 
@@ -33,6 +35,7 @@ public class TabFragment_AiHelper extends Fragment {
 
         etEmotion = view.findViewById(R.id.et_emotion);
         btnMatch = view.findViewById(R.id.btn_match);
+        btnQa = view.findViewById(R.id.btn_qa);  // 新增：绑定按钮
         tvResult = view.findViewById(R.id.tv_result);
 
         // 初始化ViewModel
@@ -69,6 +72,15 @@ public class TabFragment_AiHelper extends Fragment {
                     return;
                 }
                 matchPoemByEmotion(userInput);
+            }
+        });
+
+        // 新增：AI问答按钮点击事件
+        btnQa.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getActivity(), AiQAActivity.class);
+                startActivity(intent);
             }
         });
 
