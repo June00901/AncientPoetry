@@ -16,56 +16,122 @@
         android:gravity="center"
         android:layout_marginBottom="16dp"/>
 
+    <!-- 新增：功能选择按钮组 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginBottom="8dp">
+        android:layout_marginBottom="16dp">
 
-        <TextView
-            android:layout_width="wrap_content"
+        <Button
+            android:id="@+id/btn_ai_generate"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="体裁："
-            android:textSize="16sp"
-            android:textColor="#666666"/>
+            android:layout_weight="1"
+            android:text="AI生成诗词"
+            android:textSize="14sp"
+            android:background="@drawable/button_background"
+            android:textColor="#FFFFFF"
+            android:layout_marginEnd="8dp"/>
 
-        <Spinner
-            android:id="@+id/spinner_style"
-            android:layout_width="match_parent"
+        <Button
+            android:id="@+id/btn_ai_score"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="8dp"
-            android:layout_marginStart="8dp"/>
+            android:layout_weight="1"
+            android:text="AI诗词打分"
+            android:textSize="14sp"
+            android:background="@drawable/button_background_secondary"
+            android:textColor="#FFFFFF"/>
     </LinearLayout>
 
-    <TextView
+    <!-- AI生成区域（默认显示） -->
+    <LinearLayout
+        android:id="@+id/layout_generate"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="创作主题或关键词："
-        android:textSize="16sp"
-        android:textColor="#666666"
-        android:layout_marginBottom="8dp"/>
+        android:orientation="vertical">
 
-    <EditText
-        android:id="@+id/input_keywords"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="12dp"
-        android:background="@drawable/edit_text_background"
-        android:hint="例如：思乡、爱情、友情等"
-        android:textSize="16sp"
-        android:maxLines="1"
-        android:layout_marginBottom="16dp"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
 
-    <Button
-        android:id="@+id/btn_generate"
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="体裁："
+                android:textSize="16sp"
+                android:textColor="#666666"/>
+
+            <Spinner
+                android:id="@+id/spinner_style"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="8dp"
+                android:layout_marginStart="8dp"/>
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="创作主题或关键词："
+            android:textSize="16sp"
+            android:textColor="#666666"
+            android:layout_marginBottom="8dp"/>
+
+        <EditText
+            android:id="@+id/input_keywords"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="12dp"
+            android:background="@drawable/edit_text_background"
+            android:hint="例如：思乡、爱情、友情等"
+            android:textSize="16sp"
+            android:maxLines="1"
+            android:layout_marginBottom="16dp"/>
+
+        <Button
+            android:id="@+id/btn_generate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="开始创作"
+            android:textSize="16sp"
+            android:padding="12dp"
+            android:background="@drawable/button_background"
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="16dp"/>
+    </LinearLayout>
+
+    <!-- 评分入口提示（点击btn_ai_score后显示或跳转） -->
+    <LinearLayout
+        android:id="@+id/layout_score_hint"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="开始创作"
-        android:textSize="16sp"
-        android:padding="12dp"
-        android:background="@drawable/button_background"
-        android:textColor="#FFFFFF"
-        android:layout_marginBottom="16dp"/>
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="点击下方按钮进入专业诗词评分页面，AI将为您的原创诗词进行多维度评析"
+            android:textSize="14sp"
+            android:textColor="#666666"
+            android:gravity="center"
+            android:layout_marginBottom="12dp"/>
+
+        <Button
+            android:id="@+id/btn_go_score"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="进入诗词评分"
+            android:textSize="16sp"
+            android:padding="12dp"
+            android:background="@drawable/button_background"
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="16dp"/>
+    </LinearLayout>
 
     <ScrollView
         android:layout_width="match_parent"

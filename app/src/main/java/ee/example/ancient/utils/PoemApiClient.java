@@ -268,3 +268,22 @@ public class PoemApiClient {
         }
     }
 }
+
+/**
+ * 诗词评分专用方法
+ * @param poemType 诗词体裁
+ * @param background 创作背景
+ * @param poemContent 诗词内容
+ * @param callback 回调
+ */
+public void scorePoem(String poemType, String background, String poemContent,
+                      String poemHash, PoemCallback callback) {
+    // 构建专门的评分prompt
+    String prompt = buildScoringPrompt(poemType, background, poemContent, poemHash);
+    callApiWithPrompt(prompt, callback);
+}
+
+private String buildScoringPrompt(String type, String background, String poem, String hash) {
+    // 这个方法可以放在Activity里，这里只是示例
+    return "";
+}

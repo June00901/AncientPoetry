@@ -1,0 +1,440 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F5F5F5"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- 标题 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="AI诗词评析"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="#333333"
+            android:gravity="center"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="专业多维度评分 · 稳定性算法保障"
+            android:textSize="12sp"
+            android:textColor="#888888"
+            android:gravity="center"
+            android:layout_marginBottom="20dp"/>
+
+        <!-- 诗词体裁选择 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="诗词体裁"
+            android:textSize="14sp"
+            android:textColor="#666666"
+            android:layout_marginBottom="6dp"/>
+
+        <Spinner
+            android:id="@+id/spinner_poem_type"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@drawable/edit_text_background"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- 创作背景 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="创作背景（选填，有助于更准确评析）"
+            android:textSize="14sp"
+            android:textColor="#666666"
+            android:layout_marginBottom="6dp"/>
+
+        <EditText
+            android:id="@+id/input_background"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="80dp"
+            android:padding="12dp"
+            android:background="@drawable/edit_text_background"
+            android:hint="例如：此诗写于春日游园，感怀时光流逝..."
+            android:textSize="14sp"
+            android:gravity="top"
+            android:lineSpacingMultiplier="1.4"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- 原诗输入 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="您的原创诗词 *"
+            android:textSize="14sp"
+            android:textColor="#666666"
+            android:layout_marginBottom="6dp"/>
+
+        <EditText
+            android:id="@+id/input_original_poem"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="150dp"
+            android:padding="12dp"
+            android:background="@drawable/edit_text_background"
+            android:hint="请在此输入您的原创诗词...
+例如：
+春风拂柳绿，
+细雨润花红。
+独坐亭台晚，
+诗心入梦中。"
+            android:textSize="16sp"
+            android:gravity="top"
+            android:lineSpacingMultiplier="1.8"
+            android:typeface="serif"
+            android:layout_marginBottom="20dp"/>
+
+        <!-- 评分按钮 -->
+        <Button
+            android:id="@+id/btn_start_score"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="开始评析"
+            android:textSize="16sp"
+            android:padding="14dp"
+            android:background="@drawable/button_background"
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="24dp"/>
+
+        <!-- 加载中提示 -->
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone"
+            android:layout_marginBottom="16dp"/>
+
+        <TextView
+            android:id="@+id/text_loading"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="AI正在深度评析中..."
+            android:textSize="14sp"
+            android:textColor="#666666"
+            android:gravity="center"
+            android:visibility="gone"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- 评分结果区域 -->
+        <LinearLayout
+            android:id="@+id/layout_result"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone"
+            android:background="@drawable/result_background"
+            android:padding="16dp"
+            android:layout_marginBottom="16dp">
+
+            <!-- 总分展示 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="综合评分"
+                    android:textSize="16sp"
+                    android:textColor="#333333"
+                    android:textStyle="bold"/>
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1"
+                    android:background="#E0E0E0"
+                    android:layout_marginHorizontal="12dp"/>
+
+                <TextView
+                    android:id="@+id/text_total_score"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="85"
+                    android:textSize="36sp"
+                    android:textColor="#FF6B6B"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="分"
+                    android:textSize="16sp"
+                    android:textColor="#FF6B6B"
+                    android:layout_marginStart="4dp"/>
+            </LinearLayout>
+
+            <!-- 等级标签 -->
+            <TextView
+                android:id="@+id/text_level"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="佳作"
+                android:textSize="14sp"
+                android:textColor="#FFFFFF"
+                android:background="@drawable/tag_background"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="4dp"
+                android:layout_gravity="center"
+                android:layout_marginBottom="16dp"/>
+
+            <!-- 分项得分 -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="分项评析"
+                android:textSize="14sp"
+                android:textColor="#333333"
+                android:textStyle="bold"
+                android:layout_marginBottom="12dp"/>
+
+            <!-- 格律 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="8dp">
+
+                <TextView
+                    android:layout_width="80dp"
+                    android:layout_height="wrap_content"
+                    android:text="格律合规"
+                    android:textSize="13sp"
+                    android:textColor="#666666"/>
+
+                <ProgressBar
+                    android:id="@+id/progress_meter"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="0dp"
+                    android:layout_height="8dp"
+                    android:layout_weight="1"
+                    android:layout_gravity="center_vertical"
+                    android:progress="80"
+                    android:progressDrawable="@drawable/progress_green"
+                    android:layout_marginHorizontal="8dp"/>
+
+                <TextView
+                    android:id="@+id/text_meter_score"
+                    android:layout_width="40dp"
+                    android:layout_height="wrap_content"
+                    android:text="18/20"
+                    android:textSize="13sp"
+                    android:textColor="#333333"
+                    android:gravity="end"/>
+            </LinearLayout>
+
+            <!-- 意境 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="8dp">
+
+                <TextView
+                    android:layout_width="80dp"
+                    android:layout_height="wrap_content"
+                    android:text="意境营造"
+                    android:textSize="13sp"
+                    android:textColor="#666666"/>
+
+                <ProgressBar
+                    android:id="@+id/progress_imagery"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="0dp"
+                    android:layout_height="8dp"
+                    android:layout_weight="1"
+                    android:layout_gravity="center_vertical"
+                    android:progress="85"
+                    android:progressDrawable="@drawable/progress_blue"
+                    android:layout_marginHorizontal="8dp"/>
+
+                <TextView
+                    android:id="@+id/text_imagery_score"
+                    android:layout_width="40dp"
+                    android:layout_height="wrap_content"
+                    android:text="17/20"
+                    android:textSize="13sp"
+                    android:textColor="#333333"
+                    android:gravity="end"/>
+            </LinearLayout>
+
+            <!-- 用词 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="8dp">
+
+                <TextView
+                    android:layout_width="80dp"
+                    android:layout_height="wrap_content"
+                    android:text="炼字用词"
+                    android:textSize="13sp"
+                    android:textColor="#666666"/>
+
+                <ProgressBar
+                    android:id="@+id/progress_word"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="0dp"
+                    android:layout_height="8dp"
+                    android:layout_weight="1"
+                    android:layout_gravity="center_vertical"
+                    android:progress="75"
+                    android:progressDrawable="@drawable/progress_orange"
+                    android:layout_marginHorizontal="8dp"/>
+
+                <TextView
+                    android:id="@+id/text_word_score"
+                    android:layout_width="40dp"
+                    android:layout_height="wrap_content"
+                    android:text="15/20"
+                    android:textSize="13sp"
+                    android:textColor="#333333"
+                    android:gravity="end"/>
+            </LinearLayout>
+
+            <!-- 情感 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="8dp">
+
+                <TextView
+                    android:layout_width="80dp"
+                    android:layout_height="wrap_content"
+                    android:text="情感真挚"
+                    android:textSize="13sp"
+                    android:textColor="#666666"/>
+
+                <ProgressBar
+                    android:id="@+id/progress_emotion"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="0dp"
+                    android:layout_height="8dp"
+                    android:layout_weight="1"
+                    android:layout_gravity="center_vertical"
+                    android:progress="90"
+                    android:progressDrawable="@drawable/progress_purple"
+                    android:layout_marginHorizontal="8dp"/>
+
+                <TextView
+                    android:id="@+id/text_emotion_score"
+                    android:layout_width="40dp"
+                    android:layout_height="wrap_content"
+                    android:text="18/20"
+                    android:textSize="13sp"
+                    android:textColor="#333333"
+                    android:gravity="end"/>
+            </LinearLayout>
+
+            <!-- 创新 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:layout_width="80dp"
+                    android:layout_height="wrap_content"
+                    android:text="创意创新"
+                    android:textSize="13sp"
+                    android:textColor="#666666"/>
+
+                <ProgressBar
+                    android:id="@+id/progress_creative"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="0dp"
+                    android:layout_height="8dp"
+                    android:layout_weight="1"
+                    android:layout_gravity="center_vertical"
+                    android:progress="70"
+                    android:progressDrawable="@drawable/progress_red"
+                    android:layout_marginHorizontal="8dp"/>
+
+                <TextView
+                    android:id="@+id/text_creative_score"
+                    android:layout_width="40dp"
+                    android:layout_height="wrap_content"
+                    android:text="14/20"
+                    android:textSize="13sp"
+                    android:textColor="#333333"
+                    android:gravity="end"/>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#E0E0E0"
+                android:layout_marginBottom="16dp"/>
+
+            <!-- AI评语 -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="专家评语"
+                android:textSize="14sp"
+                android:textColor="#333333"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"/>
+
+            <TextView
+                android:id="@+id/text_comment"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="此诗格律工整，对仗较为严谨..."
+                android:textSize="14sp"
+                android:textColor="#555555"
+                android:lineSpacingMultiplier="1.6"
+                android:layout_marginBottom="16dp"/>
+
+            <!-- 修改建议 -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="精进建议"
+                android:textSize="14sp"
+                android:textColor="#333333"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"/>
+
+            <TextView
+                android:id="@+id/text_suggestion"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="建议在颔联处加强意象的对比..."
+                android:textSize="14sp"
+                android:textColor="#555555"
+                android:lineSpacingMultiplier="1.6"/>
+        </LinearLayout>
+
+        <!-- 测试用例按钮 -->
+        <Button
+            android:id="@+id/btn_load_test"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="加载测试用例"
+            android:textSize="14sp"
+            android:background="@drawable/button_background_secondary"
+            android:textColor="#FFFFFF"
+            android:layout_marginTop="8dp"/>
+    </LinearLayout>
+</ScrollView>

@@ -66,6 +66,11 @@
             android:name=".activity.AddNoteActivity"
             android:label="添加笔记" />
         <activity android:name=".AiQAActivity" />
+        <activity
+            android:name=".PoemScoreActivity"
+            android:label="AI诗词评析"
+            android:theme="@style/AppTheme"
+            android:parentActivityName=".MainActivity"/>
     </application>
 
 </manifest>
