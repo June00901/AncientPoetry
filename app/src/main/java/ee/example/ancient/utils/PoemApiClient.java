@@ -6,24 +6,26 @@ import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+
 import java.io.IOException;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import okhttp3.*;
+import java.util.concurrent.TimeUnit;
 
-//功能：实现与外部诗词生成API的交互。
-//主要功能：
-//发送请求以生成诗词，支持根据关键词和风格生成。
-//构建请求参数，包括系统消息和用户消息。
-//处理API的响应，解析生成的诗词内容。
-//提供回调接口 PoemCallback，用于处理成功和错误的响应。
+import okhttp3.*;
 
 public class PoemApiClient {
     private static final String TAG = "PoemApiClient";
     private static final String API_URL = "https://spark-api-open.xf-yun.com/v1/chat/completions";
     private static final String API_KEY = "SPTnokHiCqBTmlZNreTX:ZtxevckEPvsAhCqaTXtV";
 
-    private final OkHttpClient client = new OkHttpClient();
+    private final OkHttpClient client = new OkHttpClient.Builder()
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .retryOnConnectionFailure(true)
+            .build();
+
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     public interface PoemCallback {
@@ -31,10 +33,9 @@ public class PoemApiClient {
         void onError(String error);
     }
 
-    // 原有的生成诗词方法（完全保留，一字未改）
+    // ========== 原生成诗词方法 ==========
     public void generatePoem(String keywords, String style, PoemCallback callback) {
         try {
-            // 构建请求参数
             JSONObject jsonBody = new JSONObject();
             jsonBody.put("max_tokens", 2000);
             jsonBody.put("top_k", 4);
@@ -44,7 +45,6 @@ public class PoemApiClient {
 
             JSONArray messages = new JSONArray();
 
-            // 添加系统角色消息
             JSONObject systemMessage = new JSONObject();
             systemMessage.put("role", "system");
             StringBuilder promptBuilder = new StringBuilder();
@@ -56,11 +56,9 @@ public class PoemApiClient {
             promptBuilder.append("- 不要使用#号\n");
             promptBuilder.append("- 标题必须用《》括起来\n");
             promptBuilder.append("- 译文要通俗易懂，帮助读者理解诗词意境");
-
             systemMessage.put("content", promptBuilder.toString());
             messages.put(systemMessage);
 
-            // 添加用户消息
             JSONObject userMessage = new JSONObject();
             userMessage.put("role", "user");
             String userPrompt = "请以\"" + keywords + "\"为主题，创作一首" + style + "。";
@@ -71,7 +69,6 @@ public class PoemApiClient {
 
             Log.d(TAG, "Request Body: " + jsonBody.toString());
 
-            // 构建请求
             Request request = new Request.Builder()
                     .url(API_URL)
                     .addHeader("Authorization", "Bearer " + API_KEY)
@@ -81,7 +78,6 @@ public class PoemApiClient {
                             jsonBody.toString()))
                     .build();
 
-            // 发送请求
             client.newCall(request).enqueue(new Callback() {
                 @Override
                 public void onFailure(Call call, IOException e) {
@@ -97,7 +93,6 @@ public class PoemApiClient {
                         return;
                     }
 
-                    // 处理流式响应
                     StringBuilder poemContent = new StringBuilder();
                     try (ResponseBody responseBody = response.body()) {
                         if (responseBody != null) {
@@ -106,24 +101,17 @@ public class PoemApiClient {
                             String line;
                             while ((line = reader.readLine()) != null) {
                                 try {
-                                    // 解析每一行的JSON数据
                                     if (line.startsWith("data:")) {
-                                        String jsonStr = line.substring(5).trim(); // 去掉 "data:" 前缀
-                                        if (jsonStr.equals("[DONE]")) {
-                                            continue;
-                                        }
+                                        String jsonStr = line.substring(5).trim();
+                                        if (jsonStr.equals("[DONE]")) continue;
 
                                         JSONObject json = new JSONObject(jsonStr);
                                         if (json.has("choices")) {
                                             JSONArray choices = json.getJSONArray("choices");
                                             if (choices.length() > 0) {
                                                 JSONObject choice = choices.getJSONObject(0);
-                                                if (choice.has("delta")) {
-                                                    JSONObject delta = choice.getJSONObject("delta");
-                                                    if (delta.has("content")) {
-                                                        String content = delta.getString("content");
-                                                        poemContent.append(content);
-                                                    }
+                                                if (choice.has("delta") && choice.getJSONObject("delta").has("content")) {
+                                                    poemContent.append(choice.getJSONObject("delta").getString("content"));
                                                 }
                                             }
                                         }
@@ -139,7 +127,6 @@ public class PoemApiClient {
                         return;
                     }
 
-                    // 返回最终的诗词内容
                     String finalPoem = poemContent.toString().trim();
                     if (finalPoem.isEmpty()) {
                         mainHandler.post(() -> callback.onError("未能生成诗词"));
@@ -154,15 +141,9 @@ public class PoemApiClient {
         }
     }
 
-    // ========== 新增方法：使用自定义prompt调用API（不影响原有功能）==========
-    /**
-     * 通用方法：使用自定义prompt调用API
-     * @param customPrompt 自定义的提示词
-     * @param callback 回调接口
-     */
+    // ========== 通用自定义Prompt调用方法 ==========
     public void callApiWithPrompt(String customPrompt, PoemCallback callback) {
         try {
-            // 构建请求参数
             JSONObject jsonBody = new JSONObject();
             jsonBody.put("max_tokens", 2000);
             jsonBody.put("top_k", 4);
@@ -172,13 +153,11 @@ public class PoemApiClient {
 
             JSONArray messages = new JSONArray();
 
-            // 添加系统角色消息（可以自定义，这里用通用提示）
             JSONObject systemMessage = new JSONObject();
             systemMessage.put("role", "system");
             systemMessage.put("content", "你是一个专业的古诗词专家，擅长推荐经典诗词并进行赏析。");
             messages.put(systemMessage);
 
-            // 添加用户消息（使用自定义prompt）
             JSONObject userMessage = new JSONObject();
             userMessage.put("role", "user");
             userMessage.put("content", customPrompt);
@@ -188,7 +167,6 @@ public class PoemApiClient {
 
             Log.d(TAG, "Request Body: " + jsonBody.toString());
 
-            // 构建请求
             Request request = new Request.Builder()
                     .url(API_URL)
                     .addHeader("Authorization", "Bearer " + API_KEY)
@@ -198,7 +176,6 @@ public class PoemApiClient {
                             jsonBody.toString()))
                     .build();
 
-            // 发送请求（后面的处理逻辑和generatePoem完全一样）
             client.newCall(request).enqueue(new Callback() {
                 @Override
                 public void onFailure(Call call, IOException e) {
@@ -214,7 +191,6 @@ public class PoemApiClient {
                         return;
                     }
 
-                    // 处理流式响应
                     StringBuilder content = new StringBuilder();
                     try (ResponseBody responseBody = response.body()) {
                         if (responseBody != null) {
@@ -225,20 +201,15 @@ public class PoemApiClient {
                                 try {
                                     if (line.startsWith("data:")) {
                                         String jsonStr = line.substring(5).trim();
-                                        if (jsonStr.equals("[DONE]")) {
-                                            continue;
-                                        }
+                                        if (jsonStr.equals("[DONE]")) continue;
 
                                         JSONObject json = new JSONObject(jsonStr);
                                         if (json.has("choices")) {
                                             JSONArray choices = json.getJSONArray("choices");
                                             if (choices.length() > 0) {
                                                 JSONObject choice = choices.getJSONObject(0);
-                                                if (choice.has("delta")) {
-                                                    JSONObject delta = choice.getJSONObject("delta");
-                                                    if (delta.has("content")) {
-                                                        content.append(delta.getString("content"));
-                                                    }
+                                                if (choice.has("delta") && choice.getJSONObject("delta").has("content")) {
+                                                    content.append(choice.getJSONObject("delta").getString("content"));
                                                 }
                                             }
                                         }
@@ -267,23 +238,33 @@ public class PoemApiClient {
             callback.onError("调用失败: " + e.getMessage());
         }
     }
-}
 
-/**
- * 诗词评分专用方法
- * @param poemType 诗词体裁
- * @param background 创作背景
- * @param poemContent 诗词内容
- * @param callback 回调
- */
-public void scorePoem(String poemType, String background, String poemContent,
-                      String poemHash, PoemCallback callback) {
-    // 构建专门的评分prompt
-    String prompt = buildScoringPrompt(poemType, background, poemContent, poemHash);
-    callApiWithPrompt(prompt, callback);
-}
+    // ========== 诗词评分专用方法（带稳定性哈希） ==========
+    public void scorePoem(String poemType, String background, String poemContent,
+                          String poemHash, PoemCallback callback) {
+        String prompt = buildScoringPrompt(poemType, background, poemContent, poemHash);
+        callApiWithPrompt(prompt, callback);
+    }
 
-private String buildScoringPrompt(String type, String background, String poem, String hash) {
-    // 这个方法可以放在Activity里，这里只是示例
-    return "";
+    private String buildScoringPrompt(String type, String background, String poem, String hash) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("你是古诗词评审专家，对以下").append(type).append("进行专业评分。\n");
+        if (!background.isEmpty()) {
+            sb.append("创作背景：").append(background).append("\n");
+        }
+        sb.append("诗词内容：").append(poem).append("\n");
+        sb.append("评分维度（每项满分20分）：格律合规、意境营造、炼字用词、情感真挚、创意创新。\n");
+        sb.append("要求：\n");
+        sb.append("1. 基于诗词内容给出确定性的分数，避免模糊区间\n");
+        sb.append("2. 同一首诗（哈希值：").append(hash).append("）每次评分结果应保持一致，差异不超过3分\n");
+        sb.append("3. 仅返回JSON，不要任何其他文字，格式如下：\n");
+        sb.append("{\"total_score\":85,\"level\":\"佳作\",");
+        sb.append("\"dimensions\":[{\"name\":\"格律\",\"score\":18,\"comment\":\"格律工整\"},");
+        sb.append("{\"name\":\"意境\",\"score\":17,\"comment\":\"画面清新\"},");
+        sb.append("{\"name\":\"用词\",\"score\":15,\"comment\":\"用词精准\"},");
+        sb.append("{\"name\":\"情感\",\"score\":18,\"comment\":\"情感真挚\"},");
+        sb.append("{\"name\":\"创新\",\"score\":14,\"comment\":\"立意常规\"}],");
+        sb.append("\"overall_comment\":\"总体评价\",\"suggestions\":\"修改建议\"}");
+        return sb.toString();
+    }
 }

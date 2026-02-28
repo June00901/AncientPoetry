@@ -30,7 +30,7 @@ public class TabFragment_Community extends Fragment {
     private TextView textResult;
     private PoemApiClient poemApiClient;
 
-    // 新增：功能切换按钮
+    // 功能切换按钮
     private Button btnAiGenerate;
     private Button btnAiScore;
     private LinearLayout layoutGenerate;
@@ -73,7 +73,7 @@ public class TabFragment_Community extends Fragment {
         textResult = mView.findViewById(R.id.text_result);
         textResult.setMovementMethod(new ScrollingMovementMethod());
 
-        // 新增控件
+        // 功能切换控件
         btnAiGenerate = mView.findViewById(R.id.btn_ai_generate);
         btnAiScore = mView.findViewById(R.id.btn_ai_score);
         layoutGenerate = mView.findViewById(R.id.layout_generate);
@@ -93,6 +93,22 @@ public class TabFragment_Community extends Fragment {
     }
 
     private void setupListeners() {
+        // AI生成诗词按钮（切换显示生成区域）
+        btnAiGenerate.setOnClickListener(v -> {
+            layoutGenerate.setVisibility(View.VISIBLE);
+            layoutScoreHint.setVisibility(View.GONE);
+            btnAiGenerate.setAlpha(1.0f);
+            btnAiScore.setAlpha(0.6f);
+        });
+
+        // AI诗词打分按钮（切换显示评分入口）
+        btnAiScore.setOnClickListener(v -> {
+            layoutGenerate.setVisibility(View.GONE);
+            layoutScoreHint.setVisibility(View.VISIBLE);
+            btnAiGenerate.setAlpha(0.6f);
+            btnAiScore.setAlpha(1.0f);
+        });
+
         // 原有的生成逻辑
         btnGenerate.setOnClickListener(v -> {
             String keywords = inputKeywords.getText().toString().trim();
@@ -120,21 +136,6 @@ public class TabFragment_Community extends Fragment {
                     btnGenerate.setEnabled(true);
                 }
             });
-        });
-
-        // 新增：功能切换
-        btnAiGenerate.setOnClickListener(v -> {
-            layoutGenerate.setVisibility(View.VISIBLE);
-            layoutScoreHint.setVisibility(View.GONE);
-            btnAiGenerate.setAlpha(1.0f);
-            btnAiScore.setAlpha(0.6f);
-        });
-
-        btnAiScore.setOnClickListener(v -> {
-            layoutGenerate.setVisibility(View.GONE);
-            layoutScoreHint.setVisibility(View.VISIBLE);
-            btnAiGenerate.setAlpha(0.6f);
-            btnAiScore.setAlpha(1.0f);
         });
 
         // 跳转到评分页面
