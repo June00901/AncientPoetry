@@ -28,7 +28,7 @@ public class PlaceDatabase extends SQLiteOpenHelper {
     public static final String COLLECTIONS_TABLE = "collections";
     public static final String USERS_TABLE = "users";
     public static final String NOTES_TABLE = "notes";
-    private static final int DATABASE_VERSION = 3;
+    private static final int DATABASE_VERSION = 4; // 升级到版本4以修复表结构
 
     public PlaceDatabase(@Nullable Context context, @Nullable String name, @Nullable SQLiteDatabase.CursorFactory factory, int version) {
         super(context, name, factory, DATABASE_VERSION);
@@ -36,38 +36,42 @@ public class PlaceDatabase extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL("CREATE TABLE IF NOT EXISTS " + USERS_TABLE + 
-                   " (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                   "username TEXT, " +
-                   "password TEXT)");
-                   
+        // 创建用户表
+        db.execSQL("CREATE TABLE IF NOT EXISTS " + USERS_TABLE +
+                " (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "username TEXT, " +
+                "password TEXT)");
+
         // 添加默认用户（用户名：1，密码：1）
         ContentValues values = new ContentValues();
         values.put("username", "1");
         values.put("password", "1");
         db.insert(USERS_TABLE, null, values);
-        
-        db.execSQL("CREATE TABLE IF NOT EXISTS " + COLLECTIONS_TABLE + 
-                   " (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                   "user_id INTEGER, " +
-                   "poetry_id TEXT, " +
-                   "title TEXT, " +
-                   "content TEXT)");
-                   
+
+        // 创建收藏表
+        db.execSQL("CREATE TABLE IF NOT EXISTS " + COLLECTIONS_TABLE +
+                " (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "user_id INTEGER, " +
+                "poetry_id TEXT, " +
+                "title TEXT, " +
+                "content TEXT)");
+
+        // 创建笔记表（确保所有列都存在）
         String createNotesTable = "CREATE TABLE IF NOT EXISTS " + NOTES_TABLE + " ("
-            + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-            + "user_id INTEGER,"
-            + "title TEXT,"
-            + "content TEXT,"
-            + "poetry_content TEXT,"
-            + "poetry_translation TEXT,"
-            + "poet_info TEXT,"
-            + "theme TEXT,"
-            + "created_at DATETIME DEFAULT CURRENT_TIMESTAMP,"
-            + "updated_at DATETIME DEFAULT CURRENT_TIMESTAMP"
-            + ")";
+                + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + "user_id INTEGER,"
+                + "title TEXT,"
+                + "content TEXT,"
+                + "poetry_content TEXT,"
+                + "poetry_translation TEXT,"
+                + "poet_info TEXT,"
+                + "theme TEXT,"
+                + "created_at DATETIME DEFAULT CURRENT_TIMESTAMP,"
+                + "updated_at DATETIME DEFAULT CURRENT_TIMESTAMP"
+                + ")";
         db.execSQL(createNotesTable);
 
+        // 创建诗词表
         db.execSQL("CREATE TABLE IF NOT EXISTS " + POETRY_TABLE + " (" +
                 "_id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "name TEXT," +
@@ -80,6 +84,128 @@ public class PlaceDatabase extends SQLiteOpenHelper {
                 ")");
 
         addDefaultPoetry(db);
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        Log.d("PlaceDatabase", "升级数据库从版本 " + oldVersion + " 到 " + newVersion);
+
+        // 逐版本升级
+        if (oldVersion < 3) {
+            upgradeToVersion3(db);
+        }
+
+        if (oldVersion < 4) {
+            upgradeToVersion4(db);
+        }
+    }
+
+    /**
+     * 升级到版本3：修复笔记表结构
+     */
+    private void upgradeToVersion3(SQLiteDatabase db) {
+        try {
+            // 检查notes表是否存在
+            if (isTableExists(db, NOTES_TABLE)) {
+                // 备份旧数据
+                db.execSQL("ALTER TABLE " + NOTES_TABLE + " RENAME TO notes_backup");
+
+                // 创建新表
+                String createNotesTable = "CREATE TABLE " + NOTES_TABLE + " ("
+                        + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                        + "user_id INTEGER,"
+                        + "title TEXT,"
+                        + "content TEXT,"
+                        + "poetry_content TEXT,"
+                        + "poetry_translation TEXT,"
+                        + "poet_info TEXT,"
+                        + "theme TEXT,"
+                        + "created_at DATETIME DEFAULT CURRENT_TIMESTAMP,"
+                        + "updated_at DATETIME DEFAULT CURRENT_TIMESTAMP"
+                        + ")";
+                db.execSQL(createNotesTable);
+
+                // 恢复数据（只恢复存在的列）
+                try {
+                    db.execSQL("INSERT INTO " + NOTES_TABLE
+                            + " (id, user_id, title, content, poetry_content, poetry_translation, poet_info, theme, created_at, updated_at)"
+                            + " SELECT id, user_id, title, content, "
+                            + "COALESCE(poetry_content, ''), "
+                            + "COALESCE(poetry_translation, ''), "
+                            + "COALESCE(poet_info, ''), "
+                            + "COALESCE(theme, ''), "
+                            + "COALESCE(created_at, CURRENT_TIMESTAMP), "
+                            + "COALESCE(updated_at, CURRENT_TIMESTAMP)"
+                            + " FROM notes_backup");
+                } catch (Exception e) {
+                    Log.e("PlaceDatabase", "恢复数据失败", e);
+                }
+
+                // 删除备份表
+                db.execSQL("DROP TABLE IF EXISTS notes_backup");
+            }
+        } catch (Exception e) {
+            Log.e("PlaceDatabase", "升级到版本3失败", e);
+        }
+    }
+
+    /**
+     * 升级到版本4：确保所有必要的列都存在
+     */
+    private void upgradeToVersion4(SQLiteDatabase db) {
+        try {
+            // 检查并添加可能缺失的列
+            addColumnIfNotExists(db, NOTES_TABLE, "poetry_content", "TEXT DEFAULT ''");
+            addColumnIfNotExists(db, NOTES_TABLE, "poetry_translation", "TEXT DEFAULT ''");
+            addColumnIfNotExists(db, NOTES_TABLE, "poet_info", "TEXT DEFAULT ''");
+            addColumnIfNotExists(db, NOTES_TABLE, "theme", "TEXT DEFAULT ''");
+            addColumnIfNotExists(db, NOTES_TABLE, "created_at", "DATETIME DEFAULT CURRENT_TIMESTAMP");
+            addColumnIfNotExists(db, NOTES_TABLE, "updated_at", "DATETIME DEFAULT CURRENT_TIMESTAMP");
+
+            Log.d("PlaceDatabase", "升级到版本4完成");
+        } catch (Exception e) {
+            Log.e("PlaceDatabase", "升级到版本4失败", e);
+        }
+    }
+
+    /**
+     * 检查表是否存在
+     */
+    private boolean isTableExists(SQLiteDatabase db, String tableName) {
+        Cursor cursor = db.rawQuery(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
+                new String[]{tableName});
+        boolean exists = cursor.getCount() > 0;
+        cursor.close();
+        return exists;
+    }
+
+    /**
+     * 安全地添加列（如果不存在）
+     */
+    private void addColumnIfNotExists(SQLiteDatabase db, String tableName, String columnName, String columnType) {
+        try {
+            // 检查列是否存在
+            Cursor cursor = db.rawQuery("PRAGMA table_info(" + tableName + ")", null);
+            boolean columnExists = false;
+
+            while (cursor.moveToNext()) {
+                String name = cursor.getString(1);
+                if (name.equals(columnName)) {
+                    columnExists = true;
+                    break;
+                }
+            }
+            cursor.close();
+
+            // 如果列不存在，添加它
+            if (!columnExists) {
+                db.execSQL("ALTER TABLE " + tableName + " ADD COLUMN " + columnName + " " + columnType);
+                Log.d("PlaceDatabase", "添加列 " + columnName + " 到表 " + tableName);
+            }
+        } catch (Exception e) {
+            Log.e("PlaceDatabase", "添加列 " + columnName + " 失败", e);
+        }
     }
 
     private void addDefaultPoetry(SQLiteDatabase db) {
@@ -195,38 +321,7 @@ public class PlaceDatabase extends SQLiteOpenHelper {
         db.insert(POETRY_TABLE, null, values);
     }
 
-    @Override
-    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        if (oldVersion < 3) {
-            // 备份旧数据
-            db.execSQL("ALTER TABLE " + NOTES_TABLE + " RENAME TO notes_backup");
-            
-            // 创建新表
-            String createNotesTable = "CREATE TABLE " + NOTES_TABLE + " ("
-                + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                + "user_id INTEGER,"
-                + "title TEXT,"
-                + "content TEXT,"
-                + "poetry_content TEXT,"
-                + "poetry_translation TEXT,"
-                + "poet_info TEXT,"
-                + "theme TEXT,"
-                + "created_at DATETIME DEFAULT CURRENT_TIMESTAMP,"
-                + "updated_at DATETIME DEFAULT CURRENT_TIMESTAMP"
-                + ")";
-            db.execSQL(createNotesTable);
-            
-            // 恢复数据
-            db.execSQL("INSERT INTO " + NOTES_TABLE 
-                + " (id, user_id, title, content, poetry_content, poetry_translation, poet_info, theme)"
-                + " SELECT id, user_id, title, content, poetry_content, poetry_translation, poet_info, theme"
-                + " FROM notes_backup");
-                
-            // 删除备份表
-            db.execSQL("DROP TABLE IF EXISTS notes_backup");
-        }
-    }
-
+    // 搜索诗词
     public List<PlaceBean> find(String key) {
         List<PlaceBean> list = new ArrayList<>();
         SQLiteDatabase database = this.getReadableDatabase();
@@ -236,27 +331,31 @@ public class PlaceDatabase extends SQLiteOpenHelper {
 
         try {
             Cursor cursor = database.query(POETRY_TABLE, null, selection, selectionArgs, null, null, null);
-            
+
             if (cursor != null && cursor.moveToFirst()) {
                 do {
                     PlaceBean data = new PlaceBean();
-                    @SuppressLint("Range") String id = cursor.getString(cursor.getColumnIndex("_id"));
-                    @SuppressLint("Range") String name = cursor.getString(cursor.getColumnIndex("name"));
-                    @SuppressLint("Range") String title = cursor.getString(cursor.getColumnIndex("title"));
-                    @SuppressLint("Range") String content = cursor.getString(cursor.getColumnIndex("content"));
-                    @SuppressLint("Range") String pic = cursor.getString(cursor.getColumnIndex("pic"));
-                    @SuppressLint("Range") String theme = cursor.getString(cursor.getColumnIndex("theme"));
-                    @SuppressLint("Range") String translation = cursor.getString(cursor.getColumnIndex("translation"));
-                    @SuppressLint("Range") String poetInfo = cursor.getString(cursor.getColumnIndex("poet_info"));
 
-                    data.setId(id);
-                    data.setName(name);
-                    data.setTitle(title);
-                    data.setContent(content);
-                    data.setPic(pic);
-                    data.setTheme(theme);
-                    data.setTranslation(translation);
-                    data.setPoetInfo(poetInfo);
+                    // 安全地获取列索引
+                    int idIndex = cursor.getColumnIndex("_id");
+                    int nameIndex = cursor.getColumnIndex("name");
+                    int titleIndex = cursor.getColumnIndex("title");
+                    int contentIndex = cursor.getColumnIndex("content");
+                    int picIndex = cursor.getColumnIndex("pic");
+                    int themeIndex = cursor.getColumnIndex("theme");
+                    int translationIndex = cursor.getColumnIndex("translation");
+                    int poetInfoIndex = cursor.getColumnIndex("poet_info");
+
+                    // 只有在索引有效时才获取值
+                    if (idIndex >= 0) data.setId(cursor.getString(idIndex));
+                    if (nameIndex >= 0) data.setName(cursor.getString(nameIndex));
+                    if (titleIndex >= 0) data.setTitle(cursor.getString(titleIndex));
+                    if (contentIndex >= 0) data.setContent(cursor.getString(contentIndex));
+                    if (picIndex >= 0) data.setPic(cursor.getString(picIndex));
+                    if (themeIndex >= 0) data.setTheme(cursor.getString(themeIndex));
+                    if (translationIndex >= 0) data.setTranslation(cursor.getString(translationIndex));
+                    if (poetInfoIndex >= 0) data.setPoetInfo(cursor.getString(poetInfoIndex));
+
                     list.add(data);
                 } while (cursor.moveToNext());
             }
@@ -273,23 +372,26 @@ public class PlaceDatabase extends SQLiteOpenHelper {
         List<PlaceBean> list = new ArrayList<>();
         SQLiteDatabase database = this.getWritableDatabase();
         Cursor cursor = database.query(POETRY_TABLE, null, "_id like ?", new String[]{key}, null, null, null);
-        while (cursor.moveToNext()) {
-            @SuppressLint("Range") int id = cursor.getInt(cursor.getColumnIndex("_id"));
-            @SuppressLint("Range") String name = cursor.getString(cursor.getColumnIndex("name"));
-            @SuppressLint("Range") String title = cursor.getString(cursor.getColumnIndex("title"));
-            @SuppressLint("Range") String content = cursor.getString(cursor.getColumnIndex("content"));
-            @SuppressLint("Range") String pic = cursor.getString(cursor.getColumnIndex("pic"));
-            @SuppressLint("Range") String poetInfo = cursor.getString(cursor.getColumnIndex("poet_info"));
-            @SuppressLint("Range") String translation = cursor.getString(cursor.getColumnIndex("translation"));
 
+        while (cursor.moveToNext()) {
             PlaceBean data = new PlaceBean();
-            data.setId(String.valueOf(id));
-            data.setName(name);
-            data.setTitle(title);
-            data.setContent(content);
-            data.setPic(pic);
-            data.setPoetInfo(poetInfo);
-            data.setTranslation(translation);
+
+            int idIndex = cursor.getColumnIndex("_id");
+            int nameIndex = cursor.getColumnIndex("name");
+            int titleIndex = cursor.getColumnIndex("title");
+            int contentIndex = cursor.getColumnIndex("content");
+            int picIndex = cursor.getColumnIndex("pic");
+            int poetInfoIndex = cursor.getColumnIndex("poet_info");
+            int translationIndex = cursor.getColumnIndex("translation");
+
+            if (idIndex >= 0) data.setId(String.valueOf(cursor.getInt(idIndex)));
+            if (nameIndex >= 0) data.setName(cursor.getString(nameIndex));
+            if (titleIndex >= 0) data.setTitle(cursor.getString(titleIndex));
+            if (contentIndex >= 0) data.setContent(cursor.getString(contentIndex));
+            if (picIndex >= 0) data.setPic(cursor.getString(picIndex));
+            if (poetInfoIndex >= 0) data.setPoetInfo(cursor.getString(poetInfoIndex));
+            if (translationIndex >= 0) data.setTranslation(cursor.getString(translationIndex));
+
             list.add(data);
         }
 
@@ -300,40 +402,41 @@ public class PlaceDatabase extends SQLiteOpenHelper {
     public List<PlaceBean> findByTheme(String theme) {
         List<PlaceBean> list = new ArrayList<>();
         SQLiteDatabase database = this.getWritableDatabase();
-        
+
         try {
             Log.d("PlaceDatabase", "Searching for theme: " + theme);
-            
+
             Cursor cursor = database.query(POETRY_TABLE, null, "theme=?", new String[]{theme}, null, null, null);
             Log.d("PlaceDatabase", "Found " + cursor.getCount() + " poems");
-            
+
             while (cursor.moveToNext()) {
                 PlaceBean data = new PlaceBean();
-                @SuppressLint("Range") String id = cursor.getString(cursor.getColumnIndex("_id"));
-                @SuppressLint("Range") String name = cursor.getString(cursor.getColumnIndex("name"));
-                @SuppressLint("Range") String title = cursor.getString(cursor.getColumnIndex("title"));
-                @SuppressLint("Range") String content = cursor.getString(cursor.getColumnIndex("content"));
-                @SuppressLint("Range") String pic = cursor.getString(cursor.getColumnIndex("pic"));
-                @SuppressLint("Range") String poemTheme = cursor.getString(cursor.getColumnIndex("theme"));
-                @SuppressLint("Range") String poetInfo = cursor.getString(cursor.getColumnIndex("poet_info"));
-                @SuppressLint("Range") String translation = cursor.getString(cursor.getColumnIndex("translation"));
 
-                data.setId(id);
-                data.setName(name);
-                data.setTitle(title);
-                data.setContent(content);
-                data.setPic(pic);
-                data.setPoetInfo(poetInfo);
-                data.setTranslation(translation);
+                int idIndex = cursor.getColumnIndex("_id");
+                int nameIndex = cursor.getColumnIndex("name");
+                int titleIndex = cursor.getColumnIndex("title");
+                int contentIndex = cursor.getColumnIndex("content");
+                int picIndex = cursor.getColumnIndex("pic");
+                int poetInfoIndex = cursor.getColumnIndex("poet_info");
+                int translationIndex = cursor.getColumnIndex("translation");
+
+                if (idIndex >= 0) data.setId(cursor.getString(idIndex));
+                if (nameIndex >= 0) data.setName(cursor.getString(nameIndex));
+                if (titleIndex >= 0) data.setTitle(cursor.getString(titleIndex));
+                if (contentIndex >= 0) data.setContent(cursor.getString(contentIndex));
+                if (picIndex >= 0) data.setPic(cursor.getString(picIndex));
+                if (poetInfoIndex >= 0) data.setPoetInfo(cursor.getString(poetInfoIndex));
+                if (translationIndex >= 0) data.setTranslation(cursor.getString(translationIndex));
+
                 list.add(data);
-                
-                Log.d("PlaceDatabase", "Added poem: " + title + ", theme: " + poemTheme);
+
+                Log.d("PlaceDatabase", "Added poem: " + data.getTitle());
             }
             cursor.close();
         } catch (Exception e) {
             Log.e("PlaceDatabase", "Error finding poems by theme", e);
         }
-        
+
         return list;
     }
 
@@ -350,18 +453,26 @@ public class PlaceDatabase extends SQLiteOpenHelper {
     public List<Collection> getAllCollections(int userId) {
         List<Collection> collections = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
-        
+
         Cursor cursor = db.query(COLLECTIONS_TABLE, null,
-            "user_id = ?", new String[]{String.valueOf(userId)},
-            null, null, null);
-        
+                "user_id = ?", new String[]{String.valueOf(userId)},
+                null, null, null);
+
         while (cursor.moveToNext()) {
             Collection collection = new Collection();
-            collection.setId(cursor.getInt(cursor.getColumnIndex("id")));
-            collection.setUserId(cursor.getInt(cursor.getColumnIndex("user_id")));
-            collection.setPoetryId(cursor.getString(cursor.getColumnIndex("poetry_id")));
-            collection.setTitle(cursor.getString(cursor.getColumnIndex("title")));
-            collection.setContent(cursor.getString(cursor.getColumnIndex("content")));
+
+            int idIndex = cursor.getColumnIndex("id");
+            int userIdIndex = cursor.getColumnIndex("user_id");
+            int poetryIdIndex = cursor.getColumnIndex("poetry_id");
+            int titleIndex = cursor.getColumnIndex("title");
+            int contentIndex = cursor.getColumnIndex("content");
+
+            if (idIndex >= 0) collection.setId(cursor.getInt(idIndex));
+            if (userIdIndex >= 0) collection.setUserId(cursor.getInt(userIdIndex));
+            if (poetryIdIndex >= 0) collection.setPoetryId(cursor.getString(poetryIdIndex));
+            if (titleIndex >= 0) collection.setTitle(cursor.getString(titleIndex));
+            if (contentIndex >= 0) collection.setContent(cursor.getString(contentIndex));
+
             collections.add(collection);
         }
         cursor.close();
@@ -371,10 +482,10 @@ public class PlaceDatabase extends SQLiteOpenHelper {
     public boolean isCollected(int userId, String poetryId) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.query(COLLECTIONS_TABLE, new String[]{"id"},
-            "user_id = ? AND poetry_id = ?",
-            new String[]{String.valueOf(userId), poetryId},
-            null, null, null);
-        
+                "user_id = ? AND poetry_id = ?",
+                new String[]{String.valueOf(userId), poetryId},
+                null, null, null);
+
         boolean isCollected = cursor.getCount() > 0;
         cursor.close();
         return isCollected;
@@ -383,25 +494,25 @@ public class PlaceDatabase extends SQLiteOpenHelper {
     public int removeCollection(int userId, String poetryId) {
         SQLiteDatabase db = this.getWritableDatabase();
         return db.delete(COLLECTIONS_TABLE,
-            "user_id = ? AND poetry_id = ?",
-            new String[]{String.valueOf(userId), poetryId});
+                "user_id = ? AND poetry_id = ?",
+                new String[]{String.valueOf(userId), poetryId});
     }
 
     // 用户注册
     public long registerUser(String username, String password) {
         SQLiteDatabase db = this.getWritableDatabase();
-        
+
         // 检查用户名是否已存在
-        Cursor cursor = db.query(USERS_TABLE, null, 
-            "username = ?", new String[]{username}, 
-            null, null, null);
-        
+        Cursor cursor = db.query(USERS_TABLE, null,
+                "username = ?", new String[]{username},
+                null, null, null);
+
         if (cursor.getCount() > 0) {
             cursor.close();
             return -1; // 用户名已存在
         }
         cursor.close();
-        
+
         ContentValues values = new ContentValues();
         values.put("username", username);
         values.put("password", password);
@@ -411,15 +522,18 @@ public class PlaceDatabase extends SQLiteOpenHelper {
     // 用户登录
     public int loginUser(String username, String password) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(USERS_TABLE, new String[]{"id"}, 
-            "username = ? AND password = ?", 
-            new String[]{username, password}, 
-            null, null, null);
-        
+        Cursor cursor = db.query(USERS_TABLE, new String[]{"id"},
+                "username = ? AND password = ?",
+                new String[]{username, password},
+                null, null, null);
+
         if (cursor.moveToFirst()) {
-            @SuppressLint("Range") int userId = cursor.getInt(cursor.getColumnIndex("id"));
-            cursor.close();
-            return userId;
+            int idIndex = cursor.getColumnIndex("id");
+            if (idIndex >= 0) {
+                int userId = cursor.getInt(idIndex);
+                cursor.close();
+                return userId;
+            }
         }
         cursor.close();
         return -1; // 登录失败
@@ -428,34 +542,34 @@ public class PlaceDatabase extends SQLiteOpenHelper {
     // 修改密码
     public boolean changePassword(int userId, String oldPassword, String newPassword) {
         SQLiteDatabase db = this.getWritableDatabase();
-        
+
         // 验证旧密码
-        Cursor cursor = db.query(USERS_TABLE, null, 
-            "id = ? AND password = ?", 
-            new String[]{String.valueOf(userId), oldPassword}, 
-            null, null, null);
-        
+        Cursor cursor = db.query(USERS_TABLE, null,
+                "id = ? AND password = ?",
+                new String[]{String.valueOf(userId), oldPassword},
+                null, null, null);
+
         if (cursor.getCount() == 0) {
             cursor.close();
             return false; // 旧密码错误
         }
         cursor.close();
-        
+
         // 更新密码
         ContentValues values = new ContentValues();
         values.put("password", newPassword);
-        
-        int rows = db.update(USERS_TABLE, values, 
-            "id = ?", new String[]{String.valueOf(userId)});
+
+        int rows = db.update(USERS_TABLE, values,
+                "id = ?", new String[]{String.valueOf(userId)});
         return rows > 0;
     }
 
     // 添加笔记
     public long addNote(int userId, String title, String content, String poetryId,
-                       String poetryContent, String poetryTranslation, String poetInfo, String theme) {
+                        String poetryContent, String poetryTranslation, String poetInfo, String theme) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
-        
+
         try {
             values.put("user_id", userId);
             values.put("title", title);
@@ -464,11 +578,11 @@ public class PlaceDatabase extends SQLiteOpenHelper {
             values.put("poetry_translation", poetryTranslation);
             values.put("poet_info", poetInfo);
             values.put("theme", theme);
-            values.put("created_at", System.currentTimeMillis()); // 添加创建时间
-            values.put("updated_at", System.currentTimeMillis()); // 添加更新时间
-            
+            values.put("created_at", System.currentTimeMillis());
+            values.put("updated_at", System.currentTimeMillis());
+
             long result = db.insert(NOTES_TABLE, null, values);
-            Log.d("PlaceDatabase", "Note added with id: " + result); // 添加日志
+            Log.d("PlaceDatabase", "Note added with id: " + result);
             return result;
         } catch (Exception e) {
             Log.e("PlaceDatabase", "Error adding note: " + e.getMessage());
@@ -477,43 +591,66 @@ public class PlaceDatabase extends SQLiteOpenHelper {
         }
     }
 
-    // 获取用户的所有笔记
+    // 获取用户的所有笔记（完全修复版本）
     public List<Note> getUserNotes(int userId) {
         List<Note> notes = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
 
         try {
             String query = "SELECT * FROM " + NOTES_TABLE +
-                          " WHERE user_id = ? ORDER BY updated_at DESC";
+                    " WHERE user_id = ? ORDER BY updated_at DESC";
 
             Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(userId)});
-            Log.d("PlaceDatabase", "Found " + cursor.getCount() + " notes"); // 添加日志
+            Log.d("PlaceDatabase", "Found " + cursor.getCount() + " notes");
 
             while (cursor.moveToNext()) {
                 Note note = new Note();
-                note.setId(cursor.getInt(cursor.getColumnIndex("id")));
-                note.setUserId(cursor.getInt(cursor.getColumnIndex("user_id")));
-                note.setTitle(cursor.getString(cursor.getColumnIndex("title")));
-                note.setContent(cursor.getString(cursor.getColumnIndex("content")));
 
-                // 使用 try-catch 处理可能不存在的列
-                try {
-                    note.setPoetryContent(cursor.getString(cursor.getColumnIndex("poetry_content")));
-                    note.setPoetryTranslation(cursor.getString(cursor.getColumnIndex("poetry_translation")));
-                    note.setPoetInfo(cursor.getString(cursor.getColumnIndex("poet_info")));
-                    note.setTheme(cursor.getString(cursor.getColumnIndex("theme")));
-                } catch (Exception e) {
-                    Log.w("PlaceDatabase", "Some columns might be missing: " + e.getMessage());
+                // 安全地获取每个字段 - 先检查列索引，再获取值
+                int idIndex = cursor.getColumnIndex("id");
+                if (idIndex >= 0) {
+                    note.setId(cursor.getInt(idIndex));
                 }
 
-                // 获取时间戳
-                try {
-                    int createdAtIndex = cursor.getColumnIndex("created_at");
-                    if (createdAtIndex != -1) {
-                        note.setCreatedAt(cursor.getString(createdAtIndex));
-                    }
-                } catch (Exception e) {
-                    Log.w("PlaceDatabase", "created_at column might be missing: " + e.getMessage());
+                int userIdIndex = cursor.getColumnIndex("user_id");
+                if (userIdIndex >= 0) {
+                    note.setUserId(cursor.getInt(userIdIndex));
+                }
+
+                int titleIndex = cursor.getColumnIndex("title");
+                if (titleIndex >= 0) {
+                    note.setTitle(cursor.getString(titleIndex));
+                }
+
+                int contentIndex = cursor.getColumnIndex("content");
+                if (contentIndex >= 0) {
+                    note.setContent(cursor.getString(contentIndex));
+                }
+
+                // 可选字段 - 使用try-catch或检查索引
+                int poetryContentIndex = cursor.getColumnIndex("poetry_content");
+                if (poetryContentIndex >= 0) {
+                    note.setPoetryContent(cursor.getString(poetryContentIndex));
+                }
+
+                int poetryTranslationIndex = cursor.getColumnIndex("poetry_translation");
+                if (poetryTranslationIndex >= 0) {
+                    note.setPoetryTranslation(cursor.getString(poetryTranslationIndex));
+                }
+
+                int poetInfoIndex = cursor.getColumnIndex("poet_info");
+                if (poetInfoIndex >= 0) {
+                    note.setPoetInfo(cursor.getString(poetInfoIndex));
+                }
+
+                int themeIndex = cursor.getColumnIndex("theme");
+                if (themeIndex >= 0) {
+                    note.setTheme(cursor.getString(themeIndex));
+                }
+
+                int createdAtIndex = cursor.getColumnIndex("created_at");
+                if (createdAtIndex >= 0) {
+                    note.setCreatedAt(cursor.getString(createdAtIndex));
                 }
 
                 notes.add(note);
@@ -531,8 +668,8 @@ public class PlaceDatabase extends SQLiteOpenHelper {
     public int deleteNote(int userId, int noteId) {
         SQLiteDatabase db = this.getWritableDatabase();
         return db.delete(NOTES_TABLE,
-            "id = ? AND user_id = ?",
-            new String[]{String.valueOf(noteId), String.valueOf(userId)});
+                "id = ? AND user_id = ?",
+                new String[]{String.valueOf(noteId), String.valueOf(userId)});
     }
 
     // 更新笔记
@@ -545,8 +682,8 @@ public class PlaceDatabase extends SQLiteOpenHelper {
 
         try {
             int result = db.update(NOTES_TABLE, values,
-                "id = ? AND user_id = ?",
-                new String[]{String.valueOf(noteId), String.valueOf(userId)});
+                    "id = ? AND user_id = ?",
+                    new String[]{String.valueOf(noteId), String.valueOf(userId)});
             Log.d("PlaceDatabase", "Updated note: " + result + " rows affected");
             return result;
         } catch (Exception e) {
@@ -554,5 +691,27 @@ public class PlaceDatabase extends SQLiteOpenHelper {
             e.printStackTrace();
             return -1;
         }
+    }
+
+    // 获取诗词总数
+    public int getPoetryCount() {
+        SQLiteDatabase database = this.getReadableDatabase();
+        int count = 0;
+        Cursor cursor = null;
+
+        try {
+            cursor = database.rawQuery("SELECT COUNT(*) FROM " + POETRY_TABLE, null);
+            if (cursor.moveToFirst()) {
+                count = cursor.getInt(0);
+            }
+        } catch (Exception e) {
+            Log.e("PlaceDatabase", "获取诗词数量失败", e);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+
+        return count;
     }
 }

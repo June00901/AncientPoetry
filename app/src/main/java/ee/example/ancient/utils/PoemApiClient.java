@@ -246,6 +246,7 @@ public class PoemApiClient {
         callApiWithPrompt(prompt, callback);
     }
 
+    // ========== 修改后的 buildScoringPrompt 方法（增加格式检查） ==========
     private String buildScoringPrompt(String type, String background, String poem, String hash) {
         StringBuilder sb = new StringBuilder();
         sb.append("你是古诗词评审专家，对以下").append(type).append("进行专业评分。\n");
@@ -253,18 +254,44 @@ public class PoemApiClient {
             sb.append("创作背景：").append(background).append("\n");
         }
         sb.append("诗词内容：").append(poem).append("\n");
+
+        // 格式检查部分
+        sb.append("\n【第一步：格式检查】\n");
+        sb.append("请判断输入内容是否符合诗词基本规范：\n");
+        sb.append("1. 是否使用中文（必须包含中文字符）\n");
+        sb.append("2. 是否符合").append(type).append("的基本格式：\n");
+        sb.append("   - 五言绝句：4句，每句5字\n");
+        sb.append("   - 七言绝句：4句，每句7字\n");
+        sb.append("   - 五言律诗：8句，每句5字\n");
+        sb.append("   - 七言律诗：8句，每句7字\n");
+        sb.append("   - 词牌：符合该词牌的基本句式和字数\n");
+        sb.append("   - 现代诗：自由格式，但应有诗意\n");
+        sb.append("   - 古体诗：格式自由，但应有古风\n");
+        sb.append("3. 是否有基本的押韵或平仄意识\n");
+        sb.append("4. 内容是否完整，是否有意义\n\n");
+
         sb.append("评分维度（每项满分20分）：格律合规、意境营造、炼字用词、情感真挚、创意创新。\n");
-        sb.append("要求：\n");
-        sb.append("1. 基于诗词内容给出确定性的分数，避免模糊区间\n");
-        sb.append("2. 同一首诗（哈希值：").append(hash).append("）每次评分结果应保持一致，差异不超过3分\n");
-        sb.append("3. 仅返回JSON，不要任何其他文字，格式如下：\n");
-        sb.append("{\"total_score\":85,\"level\":\"佳作\",");
-        sb.append("\"dimensions\":[{\"name\":\"格律\",\"score\":18,\"comment\":\"格律工整\"},");
-        sb.append("{\"name\":\"意境\",\"score\":17,\"comment\":\"画面清新\"},");
-        sb.append("{\"name\":\"用词\",\"score\":15,\"comment\":\"用词精准\"},");
-        sb.append("{\"name\":\"情感\",\"score\":18,\"comment\":\"情感真挚\"},");
-        sb.append("{\"name\":\"创新\",\"score\":14,\"comment\":\"立意常规\"}],");
-        sb.append("\"overall_comment\":\"总体评价\",\"suggestions\":\"修改建议\"}");
+
+        sb.append("【输出要求】\n");
+        sb.append("请严格按照以下JSON格式返回，不要有任何其他文字：\n");
+        sb.append("{\n");
+        sb.append("  \"valid\": true,  // true=符合诗词规范，false=不符合\n");
+        sb.append("  \"format_message\": \"\",  // 格式提示信息，如果valid为false，这里说明具体问题\n");
+        sb.append("  \"total_score\": 85,\n");
+        sb.append("  \"level\": \"佳作\",\n");
+        sb.append("  \"dimensions\": [\n");
+        sb.append("    {\"name\": \"格律\", \"score\": 18, \"comment\": \"格律工整\"},\n");
+        sb.append("    {\"name\": \"意境\", \"score\": 17, \"comment\": \"画面清新\"},\n");
+        sb.append("    {\"name\": \"用词\", \"score\": 15, \"comment\": \"用词精准\"},\n");
+        sb.append("    {\"name\": \"情感\", \"score\": 18, \"comment\": \"情感真挚\"},\n");
+        sb.append("    {\"name\": \"创新\", \"score\": 14, \"comment\": \"立意常规\"}\n");
+        sb.append("  ],\n");
+        sb.append("  \"overall_comment\": \"总体评价\",\n");
+        sb.append("  \"suggestions\": \"修改建议\"\n");
+        sb.append("}\n\n");
+
+        sb.append("注意：如果valid为false，total_score可以给一个基础分（如30-50分），并在overall_comment和suggestions中给出改进建议。");
+
         return sb.toString();
     }
 }

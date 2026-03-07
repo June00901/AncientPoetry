@@ -174,21 +174,23 @@
                     android:textColor="#FF6B6B"
                     android:layout_marginStart="4dp"/>
             </LinearLayout>
-            <!-- 在等级标签后面，分项得分前面添加 -->
+
+            <!-- 详细分数行（由代码动态更新） -->
             <TextView
                 android:id="@+id/text_score_detail"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="格律：18/20  意境：17/20  用词：15/20  情感：18/20  创新：14/20"
+                android:text="格律：0/100  意境：0/100  用词：0/100  情感：0/100  创新：0/100"
                 android:textSize="14sp"
                 android:textColor="#555555"
                 android:layout_marginBottom="16dp"/>
+
             <!-- 等级标签 -->
             <TextView
                 android:id="@+id/text_level"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="佳作"
+                android:text="待改进"
                 android:textSize="14sp"
                 android:textColor="#FFFFFF"
                 android:background="#FF6B6B"
@@ -228,14 +230,14 @@
                     android:layout_height="8dp"
                     android:layout_weight="1"
                     android:layout_gravity="center_vertical"
-                    android:progress="80"
+                    android:progress="0"
+                    android:max="100"
                     android:layout_marginHorizontal="8dp"/>
 
                 <TextView
                     android:id="@+id/text_meter_score"
-                    android:layout_width="40dp"
+                    android:layout_width="60dp"
                     android:layout_height="wrap_content"
-                    android:text="18/20"
                     android:textSize="13sp"
                     android:textColor="#333333"
                     android:gravity="end"/>
@@ -262,14 +264,14 @@
                     android:layout_height="8dp"
                     android:layout_weight="1"
                     android:layout_gravity="center_vertical"
-                    android:progress="85"
+                    android:progress="0"
+                    android:max="100"
                     android:layout_marginHorizontal="8dp"/>
 
                 <TextView
                     android:id="@+id/text_imagery_score"
-                    android:layout_width="40dp"
+                    android:layout_width="60dp"
                     android:layout_height="wrap_content"
-                    android:text="17/20"
                     android:textSize="13sp"
                     android:textColor="#333333"
                     android:gravity="end"/>
@@ -296,14 +298,14 @@
                     android:layout_height="8dp"
                     android:layout_weight="1"
                     android:layout_gravity="center_vertical"
-                    android:progress="75"
+                    android:progress="0"
+                    android:max="100"
                     android:layout_marginHorizontal="8dp"/>
 
                 <TextView
                     android:id="@+id/text_word_score"
-                    android:layout_width="40dp"
+                    android:layout_width="60dp"
                     android:layout_height="wrap_content"
-                    android:text="15/20"
                     android:textSize="13sp"
                     android:textColor="#333333"
                     android:gravity="end"/>
@@ -330,14 +332,14 @@
                     android:layout_height="8dp"
                     android:layout_weight="1"
                     android:layout_gravity="center_vertical"
-                    android:progress="90"
+                    android:progress="0"
+                    android:max="100"
                     android:layout_marginHorizontal="8dp"/>
 
                 <TextView
                     android:id="@+id/text_emotion_score"
-                    android:layout_width="40dp"
+                    android:layout_width="60dp"
                     android:layout_height="wrap_content"
-                    android:text="18/20"
                     android:textSize="13sp"
                     android:textColor="#333333"
                     android:gravity="end"/>
@@ -364,14 +366,14 @@
                     android:layout_height="8dp"
                     android:layout_weight="1"
                     android:layout_gravity="center_vertical"
-                    android:progress="70"
+                    android:progress="0"
+                    android:max="100"
                     android:layout_marginHorizontal="8dp"/>
 
                 <TextView
                     android:id="@+id/text_creative_score"
-                    android:layout_width="40dp"
+                    android:layout_width="60dp"
                     android:layout_height="wrap_content"
-                    android:text="14/20"
                     android:textSize="13sp"
                     android:textColor="#333333"
                     android:gravity="end"/>
@@ -397,7 +399,7 @@
                 android:id="@+id/text_comment"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="此诗格律工整，对仗较为严谨..."
+                android:text=""
                 android:textSize="14sp"
                 android:textColor="#555555"
                 android:lineSpacingMultiplier="1.6"
@@ -417,7 +419,7 @@
                 android:id="@+id/text_suggestion"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="建议在颔联处加强意象的对比..."
+                android:text=""
                 android:textSize="14sp"
                 android:textColor="#555555"
                 android:lineSpacingMultiplier="1.6"/>
