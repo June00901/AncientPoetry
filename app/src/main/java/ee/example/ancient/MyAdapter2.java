@@ -14,6 +14,8 @@ import java.util.List;
 //继承自 BaseAdapter，实现对数据的绑定和展示。
 //提供对列表项的点击事件处理。
 
+
+//这是版本存档点
 public class MyAdapter2 extends BaseAdapter{
 
     private List<NewsBean> mData;
