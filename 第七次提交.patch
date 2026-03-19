@@ -1,0 +1,1234 @@
+Subject: [PATCH] 第七次提交：完整项目初始版本，不稳定调试 包含登录、注册、主页、AI辅助、AI打分、AIQA、缓存等所有完成修复ai诗词打分问题，并进行了ai格式校验，基础功能 ver.1.4
+---
+Index: app/src/main/java/ee/example/ancient/AiQAActivity.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/ee/example/ancient/AiQAActivity.java b/app/src/main/java/ee/example/ancient/AiQAActivity.java
+--- a/app/src/main/java/ee/example/ancient/AiQAActivity.java	(revision 3ce90e00e869521a0919f9c59a001ba252d2fcf5)
++++ b/app/src/main/java/ee/example/ancient/AiQAActivity.java	(revision 0ab82366ce030c5b4811b6fd6a4cb7fcf69158e7)
+@@ -1,5 +1,4 @@
+ package ee.example.ancient;
+-
+ import android.os.Bundle;
+ import android.os.Handler;
+ import android.os.Looper;
+Index: app/src/main/java/ee/example/ancient/PlaceDatabase.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/ee/example/ancient/PlaceDatabase.java b/app/src/main/java/ee/example/ancient/PlaceDatabase.java
+--- a/app/src/main/java/ee/example/ancient/PlaceDatabase.java	(revision 3ce90e00e869521a0919f9c59a001ba252d2fcf5)
++++ b/app/src/main/java/ee/example/ancient/PlaceDatabase.java	(revision 0ab82366ce030c5b4811b6fd6a4cb7fcf69158e7)
+@@ -28,7 +28,7 @@
+     public static final String COLLECTIONS_TABLE = "collections";
+     public static final String USERS_TABLE = "users";
+     public static final String NOTES_TABLE = "notes";
+-    private static final int DATABASE_VERSION = 3;
++    private static final int DATABASE_VERSION = 4; // 升级到版本4以修复表结构
+ 
+     public PlaceDatabase(@Nullable Context context, @Nullable String name, @Nullable SQLiteDatabase.CursorFactory factory, int version) {
+         super(context, name, factory, DATABASE_VERSION);
+@@ -36,38 +36,42 @@
+ 
+     @Override
+     public void onCreate(SQLiteDatabase db) {
+-        db.execSQL("CREATE TABLE IF NOT EXISTS " + USERS_TABLE + 
+-                   " (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+-                   "username TEXT, " +
+-                   "password TEXT)");
+-                   
++        // 创建用户表
++        db.execSQL("CREATE TABLE IF NOT EXISTS " + USERS_TABLE +
++                " (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
++                "username TEXT, " +
++                "password TEXT)");
++
+         // 添加默认用户（用户名：1，密码：1）
+         ContentValues values = new ContentValues();
+         values.put("username", "1");
+         values.put("password", "1");
+         db.insert(USERS_TABLE, null, values);
+-        
+-        db.execSQL("CREATE TABLE IF NOT EXISTS " + COLLECTIONS_TABLE + 
+-                   " (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+-                   "user_id INTEGER, " +
+-                   "poetry_id TEXT, " +
+-                   "title TEXT, " +
+-                   "content TEXT)");
+-                   
++
++        // 创建收藏表
++        db.execSQL("CREATE TABLE IF NOT EXISTS " + COLLECTIONS_TABLE +
++                " (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
++                "user_id INTEGER, " +
++                "poetry_id TEXT, " +
++                "title TEXT, " +
++                "content TEXT)");
++
++        // 创建笔记表（确保所有列都存在）
+         String createNotesTable = "CREATE TABLE IF NOT EXISTS " + NOTES_TABLE + " ("
+-            + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+-            + "user_id INTEGER,"
+-            + "title TEXT,"
+-            + "content TEXT,"
+-            + "poetry_content TEXT,"
+-            + "poetry_translation TEXT,"
+-            + "poet_info TEXT,"
+-            + "theme TEXT,"
+-            + "created_at DATETIME DEFAULT CURRENT_TIMESTAMP,"
+-            + "updated_at DATETIME DEFAULT CURRENT_TIMESTAMP"
+-            + ")";
++                + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
++                + "user_id INTEGER,"
++                + "title TEXT,"
++                + "content TEXT,"
++                + "poetry_content TEXT,"
++                + "poetry_translation TEXT,"
++                + "poet_info TEXT,"
++                + "theme TEXT,"
++                + "created_at DATETIME DEFAULT CURRENT_TIMESTAMP,"
++                + "updated_at DATETIME DEFAULT CURRENT_TIMESTAMP"
++                + ")";
+         db.execSQL(createNotesTable);
+ 
++        // 创建诗词表
+         db.execSQL("CREATE TABLE IF NOT EXISTS " + POETRY_TABLE + " (" +
+                 "_id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                 "name TEXT," +
+@@ -82,6 +86,128 @@
+         addDefaultPoetry(db);
+     }
+ 
++    @Override
++    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
++        Log.d("PlaceDatabase", "升级数据库从版本 " + oldVersion + " 到 " + newVersion);
++
++        // 逐版本升级
++        if (oldVersion < 3) {
++            upgradeToVersion3(db);
++        }
++
++        if (oldVersion < 4) {
++            upgradeToVersion4(db);
++        }
++    }
++
++    /**
++     * 升级到版本3：修复笔记表结构
++     */
++    private void upgradeToVersion3(SQLiteDatabase db) {
++        try {
++            // 检查notes表是否存在
++            if (isTableExists(db, NOTES_TABLE)) {
++                // 备份旧数据
++                db.execSQL("ALTER TABLE " + NOTES_TABLE + " RENAME TO notes_backup");
++
++                // 创建新表
++                String createNotesTable = "CREATE TABLE " + NOTES_TABLE + " ("
++                        + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
++                        + "user_id INTEGER,"
++                        + "title TEXT,"
++                        + "content TEXT,"
++                        + "poetry_content TEXT,"
++                        + "poetry_translation TEXT,"
++                        + "poet_info TEXT,"
++                        + "theme TEXT,"
++                        + "created_at DATETIME DEFAULT CURRENT_TIMESTAMP,"
++                        + "updated_at DATETIME DEFAULT CURRENT_TIMESTAMP"
++                        + ")";
++                db.execSQL(createNotesTable);
++
++                // 恢复数据（只恢复存在的列）
++                try {
++                    db.execSQL("INSERT INTO " + NOTES_TABLE
++                            + " (id, user_id, title, content, poetry_content, poetry_translation, poet_info, theme, created_at, updated_at)"
++                            + " SELECT id, user_id, title, content, "
++                            + "COALESCE(poetry_content, ''), "
++                            + "COALESCE(poetry_translation, ''), "
++                            + "COALESCE(poet_info, ''), "
++                            + "COALESCE(theme, ''), "
++                            + "COALESCE(created_at, CURRENT_TIMESTAMP), "
++                            + "COALESCE(updated_at, CURRENT_TIMESTAMP)"
++                            + " FROM notes_backup");
++                } catch (Exception e) {
++                    Log.e("PlaceDatabase", "恢复数据失败", e);
++                }
++
++                // 删除备份表
++                db.execSQL("DROP TABLE IF EXISTS notes_backup");
++            }
++        } catch (Exception e) {
++            Log.e("PlaceDatabase", "升级到版本3失败", e);
++        }
++    }
++
++    /**
++     * 升级到版本4：确保所有必要的列都存在
++     */
++    private void upgradeToVersion4(SQLiteDatabase db) {
++        try {
++            // 检查并添加可能缺失的列
++            addColumnIfNotExists(db, NOTES_TABLE, "poetry_content", "TEXT DEFAULT ''");
++            addColumnIfNotExists(db, NOTES_TABLE, "poetry_translation", "TEXT DEFAULT ''");
++            addColumnIfNotExists(db, NOTES_TABLE, "poet_info", "TEXT DEFAULT ''");
++            addColumnIfNotExists(db, NOTES_TABLE, "theme", "TEXT DEFAULT ''");
++            addColumnIfNotExists(db, NOTES_TABLE, "created_at", "DATETIME DEFAULT CURRENT_TIMESTAMP");
++            addColumnIfNotExists(db, NOTES_TABLE, "updated_at", "DATETIME DEFAULT CURRENT_TIMESTAMP");
++
++            Log.d("PlaceDatabase", "升级到版本4完成");
++        } catch (Exception e) {
++            Log.e("PlaceDatabase", "升级到版本4失败", e);
++        }
++    }
++
++    /**
++     * 检查表是否存在
++     */
++    private boolean isTableExists(SQLiteDatabase db, String tableName) {
++        Cursor cursor = db.rawQuery(
++                "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
++                new String[]{tableName});
++        boolean exists = cursor.getCount() > 0;
++        cursor.close();
++        return exists;
++    }
++
++    /**
++     * 安全地添加列（如果不存在）
++     */
++    private void addColumnIfNotExists(SQLiteDatabase db, String tableName, String columnName, String columnType) {
++        try {
++            // 检查列是否存在
++            Cursor cursor = db.rawQuery("PRAGMA table_info(" + tableName + ")", null);
++            boolean columnExists = false;
++
++            while (cursor.moveToNext()) {
++                String name = cursor.getString(1);
++                if (name.equals(columnName)) {
++                    columnExists = true;
++                    break;
++                }
++            }
++            cursor.close();
++
++            // 如果列不存在，添加它
++            if (!columnExists) {
++                db.execSQL("ALTER TABLE " + tableName + " ADD COLUMN " + columnName + " " + columnType);
++                Log.d("PlaceDatabase", "添加列 " + columnName + " 到表 " + tableName);
++            }
++        } catch (Exception e) {
++            Log.e("PlaceDatabase", "添加列 " + columnName + " 失败", e);
++        }
++    }
++
+     private void addDefaultPoetry(SQLiteDatabase db) {
+         ContentValues values = new ContentValues();
+ 
+@@ -195,38 +321,7 @@
+         db.insert(POETRY_TABLE, null, values);
+     }
+ 
+-    @Override
+-    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+-        if (oldVersion < 3) {
+-            // 备份旧数据
+-            db.execSQL("ALTER TABLE " + NOTES_TABLE + " RENAME TO notes_backup");
+-            
+-            // 创建新表
+-            String createNotesTable = "CREATE TABLE " + NOTES_TABLE + " ("
+-                + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+-                + "user_id INTEGER,"
+-                + "title TEXT,"
+-                + "content TEXT,"
+-                + "poetry_content TEXT,"
+-                + "poetry_translation TEXT,"
+-                + "poet_info TEXT,"
+-                + "theme TEXT,"
+-                + "created_at DATETIME DEFAULT CURRENT_TIMESTAMP,"
+-                + "updated_at DATETIME DEFAULT CURRENT_TIMESTAMP"
+-                + ")";
+-            db.execSQL(createNotesTable);
+-            
+-            // 恢复数据
+-            db.execSQL("INSERT INTO " + NOTES_TABLE 
+-                + " (id, user_id, title, content, poetry_content, poetry_translation, poet_info, theme)"
+-                + " SELECT id, user_id, title, content, poetry_content, poetry_translation, poet_info, theme"
+-                + " FROM notes_backup");
+-                
+-            // 删除备份表
+-            db.execSQL("DROP TABLE IF EXISTS notes_backup");
+-        }
+-    }
+-
++    // 搜索诗词
+     public List<PlaceBean> find(String key) {
+         List<PlaceBean> list = new ArrayList<>();
+         SQLiteDatabase database = this.getReadableDatabase();
+@@ -236,27 +331,31 @@
+ 
+         try {
+             Cursor cursor = database.query(POETRY_TABLE, null, selection, selectionArgs, null, null, null);
+-            
++
+             if (cursor != null && cursor.moveToFirst()) {
+                 do {
+                     PlaceBean data = new PlaceBean();
+-                    @SuppressLint("Range") String id = cursor.getString(cursor.getColumnIndex("_id"));
+-                    @SuppressLint("Range") String name = cursor.getString(cursor.getColumnIndex("name"));
+-                    @SuppressLint("Range") String title = cursor.getString(cursor.getColumnIndex("title"));
+-                    @SuppressLint("Range") String content = cursor.getString(cursor.getColumnIndex("content"));
+-                    @SuppressLint("Range") String pic = cursor.getString(cursor.getColumnIndex("pic"));
+-                    @SuppressLint("Range") String theme = cursor.getString(cursor.getColumnIndex("theme"));
+-                    @SuppressLint("Range") String translation = cursor.getString(cursor.getColumnIndex("translation"));
+-                    @SuppressLint("Range") String poetInfo = cursor.getString(cursor.getColumnIndex("poet_info"));
++
++                    // 安全地获取列索引
++                    int idIndex = cursor.getColumnIndex("_id");
++                    int nameIndex = cursor.getColumnIndex("name");
++                    int titleIndex = cursor.getColumnIndex("title");
++                    int contentIndex = cursor.getColumnIndex("content");
++                    int picIndex = cursor.getColumnIndex("pic");
++                    int themeIndex = cursor.getColumnIndex("theme");
++                    int translationIndex = cursor.getColumnIndex("translation");
++                    int poetInfoIndex = cursor.getColumnIndex("poet_info");
+ 
+-                    data.setId(id);
+-                    data.setName(name);
+-                    data.setTitle(title);
+-                    data.setContent(content);
+-                    data.setPic(pic);
+-                    data.setTheme(theme);
+-                    data.setTranslation(translation);
+-                    data.setPoetInfo(poetInfo);
++                    // 只有在索引有效时才获取值
++                    if (idIndex >= 0) data.setId(cursor.getString(idIndex));
++                    if (nameIndex >= 0) data.setName(cursor.getString(nameIndex));
++                    if (titleIndex >= 0) data.setTitle(cursor.getString(titleIndex));
++                    if (contentIndex >= 0) data.setContent(cursor.getString(contentIndex));
++                    if (picIndex >= 0) data.setPic(cursor.getString(picIndex));
++                    if (themeIndex >= 0) data.setTheme(cursor.getString(themeIndex));
++                    if (translationIndex >= 0) data.setTranslation(cursor.getString(translationIndex));
++                    if (poetInfoIndex >= 0) data.setPoetInfo(cursor.getString(poetInfoIndex));
++
+                     list.add(data);
+                 } while (cursor.moveToNext());
+             }
+@@ -273,23 +372,26 @@
+         List<PlaceBean> list = new ArrayList<>();
+         SQLiteDatabase database = this.getWritableDatabase();
+         Cursor cursor = database.query(POETRY_TABLE, null, "_id like ?", new String[]{key}, null, null, null);
++
+         while (cursor.moveToNext()) {
+-            @SuppressLint("Range") int id = cursor.getInt(cursor.getColumnIndex("_id"));
+-            @SuppressLint("Range") String name = cursor.getString(cursor.getColumnIndex("name"));
+-            @SuppressLint("Range") String title = cursor.getString(cursor.getColumnIndex("title"));
+-            @SuppressLint("Range") String content = cursor.getString(cursor.getColumnIndex("content"));
+-            @SuppressLint("Range") String pic = cursor.getString(cursor.getColumnIndex("pic"));
+-            @SuppressLint("Range") String poetInfo = cursor.getString(cursor.getColumnIndex("poet_info"));
+-            @SuppressLint("Range") String translation = cursor.getString(cursor.getColumnIndex("translation"));
+-
+             PlaceBean data = new PlaceBean();
+-            data.setId(String.valueOf(id));
+-            data.setName(name);
+-            data.setTitle(title);
+-            data.setContent(content);
+-            data.setPic(pic);
+-            data.setPoetInfo(poetInfo);
+-            data.setTranslation(translation);
++
++            int idIndex = cursor.getColumnIndex("_id");
++            int nameIndex = cursor.getColumnIndex("name");
++            int titleIndex = cursor.getColumnIndex("title");
++            int contentIndex = cursor.getColumnIndex("content");
++            int picIndex = cursor.getColumnIndex("pic");
++            int poetInfoIndex = cursor.getColumnIndex("poet_info");
++            int translationIndex = cursor.getColumnIndex("translation");
++
++            if (idIndex >= 0) data.setId(String.valueOf(cursor.getInt(idIndex)));
++            if (nameIndex >= 0) data.setName(cursor.getString(nameIndex));
++            if (titleIndex >= 0) data.setTitle(cursor.getString(titleIndex));
++            if (contentIndex >= 0) data.setContent(cursor.getString(contentIndex));
++            if (picIndex >= 0) data.setPic(cursor.getString(picIndex));
++            if (poetInfoIndex >= 0) data.setPoetInfo(cursor.getString(poetInfoIndex));
++            if (translationIndex >= 0) data.setTranslation(cursor.getString(translationIndex));
++
+             list.add(data);
+         }
+ 
+@@ -300,40 +402,41 @@
+     public List<PlaceBean> findByTheme(String theme) {
+         List<PlaceBean> list = new ArrayList<>();
+         SQLiteDatabase database = this.getWritableDatabase();
+-        
++
+         try {
+             Log.d("PlaceDatabase", "Searching for theme: " + theme);
+-            
++
+             Cursor cursor = database.query(POETRY_TABLE, null, "theme=?", new String[]{theme}, null, null, null);
+             Log.d("PlaceDatabase", "Found " + cursor.getCount() + " poems");
+-            
++
+             while (cursor.moveToNext()) {
+                 PlaceBean data = new PlaceBean();
+-                @SuppressLint("Range") String id = cursor.getString(cursor.getColumnIndex("_id"));
+-                @SuppressLint("Range") String name = cursor.getString(cursor.getColumnIndex("name"));
+-                @SuppressLint("Range") String title = cursor.getString(cursor.getColumnIndex("title"));
+-                @SuppressLint("Range") String content = cursor.getString(cursor.getColumnIndex("content"));
+-                @SuppressLint("Range") String pic = cursor.getString(cursor.getColumnIndex("pic"));
+-                @SuppressLint("Range") String poemTheme = cursor.getString(cursor.getColumnIndex("theme"));
+-                @SuppressLint("Range") String poetInfo = cursor.getString(cursor.getColumnIndex("poet_info"));
+-                @SuppressLint("Range") String translation = cursor.getString(cursor.getColumnIndex("translation"));
++
++                int idIndex = cursor.getColumnIndex("_id");
++                int nameIndex = cursor.getColumnIndex("name");
++                int titleIndex = cursor.getColumnIndex("title");
++                int contentIndex = cursor.getColumnIndex("content");
++                int picIndex = cursor.getColumnIndex("pic");
++                int poetInfoIndex = cursor.getColumnIndex("poet_info");
++                int translationIndex = cursor.getColumnIndex("translation");
+ 
+-                data.setId(id);
+-                data.setName(name);
+-                data.setTitle(title);
+-                data.setContent(content);
+-                data.setPic(pic);
+-                data.setPoetInfo(poetInfo);
+-                data.setTranslation(translation);
++                if (idIndex >= 0) data.setId(cursor.getString(idIndex));
++                if (nameIndex >= 0) data.setName(cursor.getString(nameIndex));
++                if (titleIndex >= 0) data.setTitle(cursor.getString(titleIndex));
++                if (contentIndex >= 0) data.setContent(cursor.getString(contentIndex));
++                if (picIndex >= 0) data.setPic(cursor.getString(picIndex));
++                if (poetInfoIndex >= 0) data.setPoetInfo(cursor.getString(poetInfoIndex));
++                if (translationIndex >= 0) data.setTranslation(cursor.getString(translationIndex));
++
+                 list.add(data);
+-                
+-                Log.d("PlaceDatabase", "Added poem: " + title + ", theme: " + poemTheme);
++
++                Log.d("PlaceDatabase", "Added poem: " + data.getTitle());
+             }
+             cursor.close();
+         } catch (Exception e) {
+             Log.e("PlaceDatabase", "Error finding poems by theme", e);
+         }
+-        
++
+         return list;
+     }
+ 
+@@ -350,18 +453,26 @@
+     public List<Collection> getAllCollections(int userId) {
+         List<Collection> collections = new ArrayList<>();
+         SQLiteDatabase db = this.getReadableDatabase();
+-        
++
+         Cursor cursor = db.query(COLLECTIONS_TABLE, null,
+-            "user_id = ?", new String[]{String.valueOf(userId)},
+-            null, null, null);
+-        
++                "user_id = ?", new String[]{String.valueOf(userId)},
++                null, null, null);
++
+         while (cursor.moveToNext()) {
+             Collection collection = new Collection();
+-            collection.setId(cursor.getInt(cursor.getColumnIndex("id")));
+-            collection.setUserId(cursor.getInt(cursor.getColumnIndex("user_id")));
+-            collection.setPoetryId(cursor.getString(cursor.getColumnIndex("poetry_id")));
+-            collection.setTitle(cursor.getString(cursor.getColumnIndex("title")));
+-            collection.setContent(cursor.getString(cursor.getColumnIndex("content")));
++
++            int idIndex = cursor.getColumnIndex("id");
++            int userIdIndex = cursor.getColumnIndex("user_id");
++            int poetryIdIndex = cursor.getColumnIndex("poetry_id");
++            int titleIndex = cursor.getColumnIndex("title");
++            int contentIndex = cursor.getColumnIndex("content");
++
++            if (idIndex >= 0) collection.setId(cursor.getInt(idIndex));
++            if (userIdIndex >= 0) collection.setUserId(cursor.getInt(userIdIndex));
++            if (poetryIdIndex >= 0) collection.setPoetryId(cursor.getString(poetryIdIndex));
++            if (titleIndex >= 0) collection.setTitle(cursor.getString(titleIndex));
++            if (contentIndex >= 0) collection.setContent(cursor.getString(contentIndex));
++
+             collections.add(collection);
+         }
+         cursor.close();
+@@ -371,10 +482,10 @@
+     public boolean isCollected(int userId, String poetryId) {
+         SQLiteDatabase db = this.getReadableDatabase();
+         Cursor cursor = db.query(COLLECTIONS_TABLE, new String[]{"id"},
+-            "user_id = ? AND poetry_id = ?",
+-            new String[]{String.valueOf(userId), poetryId},
+-            null, null, null);
+-        
++                "user_id = ? AND poetry_id = ?",
++                new String[]{String.valueOf(userId), poetryId},
++                null, null, null);
++
+         boolean isCollected = cursor.getCount() > 0;
+         cursor.close();
+         return isCollected;
+@@ -383,25 +494,25 @@
+     public int removeCollection(int userId, String poetryId) {
+         SQLiteDatabase db = this.getWritableDatabase();
+         return db.delete(COLLECTIONS_TABLE,
+-            "user_id = ? AND poetry_id = ?",
+-            new String[]{String.valueOf(userId), poetryId});
++                "user_id = ? AND poetry_id = ?",
++                new String[]{String.valueOf(userId), poetryId});
+     }
+ 
+     // 用户注册
+     public long registerUser(String username, String password) {
+         SQLiteDatabase db = this.getWritableDatabase();
+-        
++
+         // 检查用户名是否已存在
+-        Cursor cursor = db.query(USERS_TABLE, null, 
+-            "username = ?", new String[]{username}, 
+-            null, null, null);
+-        
++        Cursor cursor = db.query(USERS_TABLE, null,
++                "username = ?", new String[]{username},
++                null, null, null);
++
+         if (cursor.getCount() > 0) {
+             cursor.close();
+             return -1; // 用户名已存在
+         }
+         cursor.close();
+-        
++
+         ContentValues values = new ContentValues();
+         values.put("username", username);
+         values.put("password", password);
+@@ -411,15 +522,18 @@
+     // 用户登录
+     public int loginUser(String username, String password) {
+         SQLiteDatabase db = this.getReadableDatabase();
+-        Cursor cursor = db.query(USERS_TABLE, new String[]{"id"}, 
+-            "username = ? AND password = ?", 
+-            new String[]{username, password}, 
+-            null, null, null);
+-        
++        Cursor cursor = db.query(USERS_TABLE, new String[]{"id"},
++                "username = ? AND password = ?",
++                new String[]{username, password},
++                null, null, null);
++
+         if (cursor.moveToFirst()) {
+-            @SuppressLint("Range") int userId = cursor.getInt(cursor.getColumnIndex("id"));
+-            cursor.close();
+-            return userId;
++            int idIndex = cursor.getColumnIndex("id");
++            if (idIndex >= 0) {
++                int userId = cursor.getInt(idIndex);
++                cursor.close();
++                return userId;
++            }
+         }
+         cursor.close();
+         return -1; // 登录失败
+@@ -428,34 +542,34 @@
+     // 修改密码
+     public boolean changePassword(int userId, String oldPassword, String newPassword) {
+         SQLiteDatabase db = this.getWritableDatabase();
+-        
++
+         // 验证旧密码
+-        Cursor cursor = db.query(USERS_TABLE, null, 
+-            "id = ? AND password = ?", 
+-            new String[]{String.valueOf(userId), oldPassword}, 
+-            null, null, null);
+-        
++        Cursor cursor = db.query(USERS_TABLE, null,
++                "id = ? AND password = ?",
++                new String[]{String.valueOf(userId), oldPassword},
++                null, null, null);
++
+         if (cursor.getCount() == 0) {
+             cursor.close();
+             return false; // 旧密码错误
+         }
+         cursor.close();
+-        
++
+         // 更新密码
+         ContentValues values = new ContentValues();
+         values.put("password", newPassword);
+-        
+-        int rows = db.update(USERS_TABLE, values, 
+-            "id = ?", new String[]{String.valueOf(userId)});
++
++        int rows = db.update(USERS_TABLE, values,
++                "id = ?", new String[]{String.valueOf(userId)});
+         return rows > 0;
+     }
+ 
+     // 添加笔记
+     public long addNote(int userId, String title, String content, String poetryId,
+-                       String poetryContent, String poetryTranslation, String poetInfo, String theme) {
++                        String poetryContent, String poetryTranslation, String poetInfo, String theme) {
+         SQLiteDatabase db = this.getWritableDatabase();
+         ContentValues values = new ContentValues();
+-        
++
+         try {
+             values.put("user_id", userId);
+             values.put("title", title);
+@@ -464,11 +578,11 @@
+             values.put("poetry_translation", poetryTranslation);
+             values.put("poet_info", poetInfo);
+             values.put("theme", theme);
+-            values.put("created_at", System.currentTimeMillis()); // 添加创建时间
+-            values.put("updated_at", System.currentTimeMillis()); // 添加更新时间
+-            
++            values.put("created_at", System.currentTimeMillis());
++            values.put("updated_at", System.currentTimeMillis());
++
+             long result = db.insert(NOTES_TABLE, null, values);
+-            Log.d("PlaceDatabase", "Note added with id: " + result); // 添加日志
++            Log.d("PlaceDatabase", "Note added with id: " + result);
+             return result;
+         } catch (Exception e) {
+             Log.e("PlaceDatabase", "Error adding note: " + e.getMessage());
+@@ -477,43 +591,66 @@
+         }
+     }
+ 
+-    // 获取用户的所有笔记
++    // 获取用户的所有笔记（完全修复版本）
+     public List<Note> getUserNotes(int userId) {
+         List<Note> notes = new ArrayList<>();
+         SQLiteDatabase db = this.getReadableDatabase();
+ 
+         try {
+             String query = "SELECT * FROM " + NOTES_TABLE +
+-                          " WHERE user_id = ? ORDER BY updated_at DESC";
++                    " WHERE user_id = ? ORDER BY updated_at DESC";
+ 
+             Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(userId)});
+-            Log.d("PlaceDatabase", "Found " + cursor.getCount() + " notes"); // 添加日志
++            Log.d("PlaceDatabase", "Found " + cursor.getCount() + " notes");
+ 
+             while (cursor.moveToNext()) {
+                 Note note = new Note();
+-                note.setId(cursor.getInt(cursor.getColumnIndex("id")));
+-                note.setUserId(cursor.getInt(cursor.getColumnIndex("user_id")));
+-                note.setTitle(cursor.getString(cursor.getColumnIndex("title")));
+-                note.setContent(cursor.getString(cursor.getColumnIndex("content")));
++
++                // 安全地获取每个字段 - 先检查列索引，再获取值
++                int idIndex = cursor.getColumnIndex("id");
++                if (idIndex >= 0) {
++                    note.setId(cursor.getInt(idIndex));
++                }
++
++                int userIdIndex = cursor.getColumnIndex("user_id");
++                if (userIdIndex >= 0) {
++                    note.setUserId(cursor.getInt(userIdIndex));
++                }
++
++                int titleIndex = cursor.getColumnIndex("title");
++                if (titleIndex >= 0) {
++                    note.setTitle(cursor.getString(titleIndex));
++                }
++
++                int contentIndex = cursor.getColumnIndex("content");
++                if (contentIndex >= 0) {
++                    note.setContent(cursor.getString(contentIndex));
++                }
++
++                // 可选字段 - 使用try-catch或检查索引
++                int poetryContentIndex = cursor.getColumnIndex("poetry_content");
++                if (poetryContentIndex >= 0) {
++                    note.setPoetryContent(cursor.getString(poetryContentIndex));
++                }
+ 
+-                // 使用 try-catch 处理可能不存在的列
+-                try {
+-                    note.setPoetryContent(cursor.getString(cursor.getColumnIndex("poetry_content")));
+-                    note.setPoetryTranslation(cursor.getString(cursor.getColumnIndex("poetry_translation")));
+-                    note.setPoetInfo(cursor.getString(cursor.getColumnIndex("poet_info")));
+-                    note.setTheme(cursor.getString(cursor.getColumnIndex("theme")));
+-                } catch (Exception e) {
+-                    Log.w("PlaceDatabase", "Some columns might be missing: " + e.getMessage());
++                int poetryTranslationIndex = cursor.getColumnIndex("poetry_translation");
++                if (poetryTranslationIndex >= 0) {
++                    note.setPoetryTranslation(cursor.getString(poetryTranslationIndex));
+                 }
+ 
+-                // 获取时间戳
+-                try {
+-                    int createdAtIndex = cursor.getColumnIndex("created_at");
+-                    if (createdAtIndex != -1) {
+-                        note.setCreatedAt(cursor.getString(createdAtIndex));
+-                    }
+-                } catch (Exception e) {
+-                    Log.w("PlaceDatabase", "created_at column might be missing: " + e.getMessage());
++                int poetInfoIndex = cursor.getColumnIndex("poet_info");
++                if (poetInfoIndex >= 0) {
++                    note.setPoetInfo(cursor.getString(poetInfoIndex));
++                }
++
++                int themeIndex = cursor.getColumnIndex("theme");
++                if (themeIndex >= 0) {
++                    note.setTheme(cursor.getString(themeIndex));
++                }
++
++                int createdAtIndex = cursor.getColumnIndex("created_at");
++                if (createdAtIndex >= 0) {
++                    note.setCreatedAt(cursor.getString(createdAtIndex));
+                 }
+ 
+                 notes.add(note);
+@@ -531,8 +668,8 @@
+     public int deleteNote(int userId, int noteId) {
+         SQLiteDatabase db = this.getWritableDatabase();
+         return db.delete(NOTES_TABLE,
+-            "id = ? AND user_id = ?",
+-            new String[]{String.valueOf(noteId), String.valueOf(userId)});
++                "id = ? AND user_id = ?",
++                new String[]{String.valueOf(noteId), String.valueOf(userId)});
+     }
+ 
+     // 更新笔记
+@@ -545,8 +682,8 @@
+ 
+         try {
+             int result = db.update(NOTES_TABLE, values,
+-                "id = ? AND user_id = ?",
+-                new String[]{String.valueOf(noteId), String.valueOf(userId)});
++                    "id = ? AND user_id = ?",
++                    new String[]{String.valueOf(noteId), String.valueOf(userId)});
+             Log.d("PlaceDatabase", "Updated note: " + result + " rows affected");
+             return result;
+         } catch (Exception e) {
+@@ -555,4 +692,26 @@
+             return -1;
+         }
+     }
+-}
++
++    // 获取诗词总数
++    public int getPoetryCount() {
++        SQLiteDatabase database = this.getReadableDatabase();
++        int count = 0;
++        Cursor cursor = null;
++
++        try {
++            cursor = database.rawQuery("SELECT COUNT(*) FROM " + POETRY_TABLE, null);
++            if (cursor.moveToFirst()) {
++                count = cursor.getInt(0);
++            }
++        } catch (Exception e) {
++            Log.e("PlaceDatabase", "获取诗词数量失败", e);
++        } finally {
++            if (cursor != null) {
++                cursor.close();
++            }
++        }
++
++        return count;
++    }
++}
+\ No newline at end of file
+Index: app/src/main/java/ee/example/ancient/PoemScoreActivity.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/ee/example/ancient/PoemScoreActivity.java b/app/src/main/java/ee/example/ancient/PoemScoreActivity.java
+--- a/app/src/main/java/ee/example/ancient/PoemScoreActivity.java	(revision 3ce90e00e869521a0919f9c59a001ba252d2fcf5)
++++ b/app/src/main/java/ee/example/ancient/PoemScoreActivity.java	(revision 0ab82366ce030c5b4811b6fd6a4cb7fcf69158e7)
+@@ -5,7 +5,6 @@
+ import android.os.Looper;
+ import android.text.TextUtils;
+ import android.view.View;
+-import android.widget.AdapterView;
+ import android.widget.ArrayAdapter;
+ import android.widget.Button;
+ import android.widget.EditText;
+@@ -60,6 +59,10 @@
+     private ProgressBar progressBar;
+     private LinearLayout layoutResult;
+     private TextView textTotalScore, textLevel, textScoreDetail, textComment, textSuggestion;
++    private TextView textMeterScore, textImageryScore, textWordScore, textEmotionScore, textCreativeScore;
++
++    // 新增进度条变量
++    private ProgressBar progressMeter, progressImagery, progressWord, progressEmotion, progressCreative;
+ 
+     private PoemApiClient apiClient;
+     private Handler mainHandler;
+@@ -90,6 +93,20 @@
+         textScoreDetail = findViewById(R.id.text_score_detail);
+         textComment = findViewById(R.id.text_comment);
+         textSuggestion = findViewById(R.id.text_suggestion);
++
++        // 分项分数TextView
++        textMeterScore = findViewById(R.id.text_meter_score);
++        textImageryScore = findViewById(R.id.text_imagery_score);
++        textWordScore = findViewById(R.id.text_word_score);
++        textEmotionScore = findViewById(R.id.text_emotion_score);
++        textCreativeScore = findViewById(R.id.text_creative_score);
++
++        // 初始化进度条
++        progressMeter = findViewById(R.id.progress_meter);
++        progressImagery = findViewById(R.id.progress_imagery);
++        progressWord = findViewById(R.id.progress_word);
++        progressEmotion = findViewById(R.id.progress_emotion);
++        progressCreative = findViewById(R.id.progress_creative);
+     }
+ 
+     private void setupSpinner() {
+@@ -134,6 +151,7 @@
+                 runOnUiThread(() -> {
+                     showLoading(false);
+                     Toast.makeText(PoemScoreActivity.this, "评分失败：" + error, Toast.LENGTH_LONG).show();
++                    setDefaultResult();
+                 });
+             }
+         });
+@@ -149,61 +167,152 @@
+             }
+             JSONObject json = new JSONObject(jsonStr);
+ 
+-            int totalScore = json.getInt("total_score");
+-            String level = json.getString("level");
+-            JSONArray dimensions = json.getJSONArray("dimensions");
++            // 新增：获取格式检查结果
++            boolean isValid = json.optBoolean("valid", true);
++            String formatMessage = json.optString("format_message", "");
++
++            // 如果格式有问题，显示提示（但不中断流程）
++            if (!isValid) {
++                runOnUiThread(() -> {
++                    Toast.makeText(this, "格式提示：" + formatMessage, Toast.LENGTH_LONG).show();
++                });
++            }
+ 
+-            // 应用权重调整
+-            double[] weights = STABILITY_WEIGHTS.getOrDefault(poemType, STABILITY_WEIGHTS.get("古体诗"));
++            // 获取总分（如果没有则用维度计算）
++            int totalScore = json.optInt("total_score", 0);
++            JSONArray dimensions = json.optJSONArray("dimensions");
++
++            // 初始化维度分数（20分制）
+             int meterScore = 0, imageryScore = 0, wordScore = 0, emotionScore = 0, creativeScore = 0;
+ 
+-            for (int i = 0; i < dimensions.length(); i++) {
+-                JSONObject dim = dimensions.getJSONObject(i);
+-                String name = dim.getString("name");
+-                int score = dim.getInt("score");
+-                if (name.contains("格律")) meterScore = score;
+-                else if (name.contains("意境")) imageryScore = score;
+-                else if (name.contains("用词")) wordScore = score;
+-                else if (name.contains("情感")) emotionScore = score;
+-                else if (name.contains("创新")) creativeScore = score;
++            if (dimensions != null) {
++                for (int i = 0; i < dimensions.length(); i++) {
++                    JSONObject dim = dimensions.getJSONObject(i);
++                    String name = dim.optString("name", "");
++                    int score = dim.optInt("score", 0);
++                    if (name.contains("格律")) meterScore = score;
++                    else if (name.contains("意境")) imageryScore = score;
++                    else if (name.contains("用词")) wordScore = score;
++                    else if (name.contains("情感")) emotionScore = score;
++                    else if (name.contains("创新")) creativeScore = score;
++                }
++            } else {
++                JSONObject dims = json.optJSONObject("dimensions");
++                if (dims != null) {
++                    if (dims.has("meter")) meterScore = dims.getJSONObject("meter").optInt("score", 0);
++                    if (dims.has("imagery")) imageryScore = dims.getJSONObject("imagery").optInt("score", 0);
++                    if (dims.has("wording")) wordScore = dims.getJSONObject("wording").optInt("score", 0);
++                    if (dims.has("emotion")) emotionScore = dims.getJSONObject("emotion").optInt("score", 0);
++                    if (dims.has("creative")) creativeScore = dims.getJSONObject("creative").optInt("score", 0);
++                }
+             }
+ 
+-            // 加权计算
++            // 计算加权总分（20分制）
++            double[] weights = STABILITY_WEIGHTS.getOrDefault(poemType, STABILITY_WEIGHTS.get("古体诗"));
+             double weightedTotal = meterScore * weights[0] + imageryScore * weights[1] +
+                     wordScore * weights[2] + emotionScore * weights[3] + creativeScore * weights[4];
+-            totalScore = Math.min(100, Math.max(0, (int) Math.round(weightedTotal)));
+-            level = getLevel(totalScore);
++
++            // 转百分制
++            int calculatedTotal = (int)Math.round(weightedTotal * 5);
+ 
+-            // 显示
++            // 如果AI返回的总分存在且合理，则使用AI总分，否则用计算值
++            if (totalScore > 0 && totalScore <= 100) {
++                // 已经是百分制，直接使用
++            } else {
++                totalScore = calculatedTotal;
++            }
++
++            // 如果格式有问题，可以适当降低总分
++            if (!isValid && totalScore > 60) {
++                totalScore = Math.min(60, totalScore - 10);
++            }
++
++            // 应用稳定性校验
++            totalScore = applyStabilityCheck(totalScore, poemType);
++            totalScore = Math.min(100, Math.max(0, totalScore));
++
++            // 更新等级
++            String level = calculateLevel(totalScore);
++
++            // 显示总分
+             textTotalScore.setText(String.valueOf(totalScore));
+             textLevel.setText(level);
+             textLevel.setBackgroundColor(getLevelColor(totalScore));
+-            textScoreDetail.setText(String.format("格律：%d/20  意境：%d/20  用词：%d/20  情感：%d/20  创新：%d/20",
+-                    meterScore, imageryScore, wordScore, emotionScore, creativeScore));
+-            textComment.setText(json.optString("overall_comment", "暂无评语"));
+-            textSuggestion.setText(json.optString("suggestions", "暂无建议"));
++
++            // 将20分制维度分数转换为百分制显示
++            int meterPercent = meterScore * 5;
++            int imageryPercent = imageryScore * 5;
++            int wordPercent = wordScore * 5;
++            int emotionPercent = emotionScore * 5;
++            int creativePercent = creativeScore * 5;
++
++            // 显示详细分数（百分制）
++            textScoreDetail.setText(String.format("格律：%d/100  意境：%d/100  用词：%d/100  情感：%d/100  创新：%d/100",
++                    meterPercent, imageryPercent, wordPercent, emotionPercent, creativePercent));
++
++            // 更新分项评析的分数显示（百分制）
++            textMeterScore.setText(meterPercent + "/100");
++            textImageryScore.setText(imageryPercent + "/100");
++            textWordScore.setText(wordPercent + "/100");
++            textEmotionScore.setText(emotionPercent + "/100");
++            textCreativeScore.setText(creativePercent + "/100");
++
++            // 设置进度条进度
++            progressMeter.setProgress(meterPercent);
++            progressImagery.setProgress(imageryPercent);
++            progressWord.setProgress(wordPercent);
++            progressEmotion.setProgress(emotionPercent);
++            progressCreative.setProgress(creativePercent);
++
++            // 评语和建议（如果格式有问题，可以在评语中追加提示）
++            String comment = json.optString("overall_comment", "暂无评语");
++            String suggestion = json.optString("suggestions", "暂无建议");
++
++            if (!isValid) {
++                comment = "【格式提示】" + formatMessage + "\n\n" + comment;
++            }
++
++            textComment.setText(comment);
++            textSuggestion.setText(suggestion);
+ 
+             layoutResult.setVisibility(View.VISIBLE);
+         } catch (Exception e) {
+             e.printStackTrace();
+-            Toast.makeText(this, "解析结果失败", Toast.LENGTH_SHORT).show();
++            Toast.makeText(this, "解析结果失败，使用默认评分", Toast.LENGTH_SHORT).show();
++            setDefaultResult();
+         }
+     }
+ 
+-    private String getLevel(int score) {
+-        if (score >= 90) return "传世之作";
+-        if (score >= 85) return "上乘佳作";
+-        if (score >= 80) return "优秀";
+-        if (score >= 70) return "良好";
+-        if (score >= 60) return "合格";
+-        return "待改进";
++    private void setDefaultResult() {
++        int defaultScore = 75;
++        textTotalScore.setText(String.valueOf(defaultScore));
++        textLevel.setText(calculateLevel(defaultScore));
++        textLevel.setBackgroundColor(getLevelColor(defaultScore));
++        textScoreDetail.setText("格律：75/100  意境：75/100  用词：75/100  情感：75/100  创新：75/100");
++
++        // 分项分数也设为默认值
++        textMeterScore.setText("75/100");
++        textImageryScore.setText("75/100");
++        textWordScore.setText("75/100");
++        textEmotionScore.setText("75/100");
++        textCreativeScore.setText("75/100");
++
++        // 默认进度条进度
++        progressMeter.setProgress(75);
++        progressImagery.setProgress(75);
++        progressWord.setProgress(75);
++        progressEmotion.setProgress(75);
++        progressCreative.setProgress(75);
++
++        textComment.setText("AI评析暂时无法获取，请重试。");
++        textSuggestion.setText("检查网络或稍后重试。");
++        layoutResult.setVisibility(View.VISIBLE);
+     }
+ 
+-    private int getLevelColor(int score) {
+-        if (score >= 85) return 0xFFE74C3C;
+-        if (score >= 70) return 0xFF3498DB;
+-        if (score >= 60) return 0xFF2ECC71;
+-        return 0xFF95A5A6;
++    private int applyStabilityCheck(int rawScore, String poemType) {
++        int hashOffset = (currentPoemHash.hashCode() % 5) - 2;
++        int stableScore = rawScore + hashOffset;
++        return Math.min(100, Math.max(0, stableScore));
+     }
+ 
+     private String calculateHash(String input) {
+@@ -211,13 +320,33 @@
+             MessageDigest md = MessageDigest.getInstance("MD5");
+             byte[] digest = md.digest(input.getBytes());
+             StringBuilder sb = new StringBuilder();
+-            for (byte b : digest) sb.append(String.format("%02x", b));
++            for (byte b : digest) {
++                sb.append(String.format("%02x", b));
++            }
+             return sb.toString();
+         } catch (NoSuchAlgorithmException e) {
+             return String.valueOf(input.hashCode());
+         }
+     }
+ 
++    private String calculateLevel(int score) {
++        if (score >= 95) return "传世之作";
++        if (score >= 90) return "上乘佳作";
++        if (score >= 85) return "优秀";
++        if (score >= 80) return "良好";
++        if (score >= 70) return "合格";
++        if (score >= 60) return "尚可";
++        return "待改进";
++    }
++
++    private int getLevelColor(int score) {
++        if (score >= 90) return 0xFFE74C3C;
++        if (score >= 80) return 0xFF3498DB;
++        if (score >= 70) return 0xFF2ECC71;
++        if (score >= 60) return 0xFFF39C12;
++        return 0xFF95A5A6;
++    }
++
+     private void showLoading(boolean show) {
+         progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
+         btnScore.setEnabled(!show);
+Index: app/src/main/java/ee/example/ancient/utils/PoemApiClient.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/ee/example/ancient/utils/PoemApiClient.java b/app/src/main/java/ee/example/ancient/utils/PoemApiClient.java
+--- a/app/src/main/java/ee/example/ancient/utils/PoemApiClient.java	(revision 3ce90e00e869521a0919f9c59a001ba252d2fcf5)
++++ b/app/src/main/java/ee/example/ancient/utils/PoemApiClient.java	(revision 0ab82366ce030c5b4811b6fd6a4cb7fcf69158e7)
+@@ -246,6 +246,7 @@
+         callApiWithPrompt(prompt, callback);
+     }
+ 
++    // ========== 修改后的 buildScoringPrompt 方法（增加格式检查） ==========
+     private String buildScoringPrompt(String type, String background, String poem, String hash) {
+         StringBuilder sb = new StringBuilder();
+         sb.append("你是古诗词评审专家，对以下").append(type).append("进行专业评分。\n");
+@@ -253,18 +254,44 @@
+             sb.append("创作背景：").append(background).append("\n");
+         }
+         sb.append("诗词内容：").append(poem).append("\n");
++
++        // 格式检查部分
++        sb.append("\n【第一步：格式检查】\n");
++        sb.append("请判断输入内容是否符合诗词基本规范：\n");
++        sb.append("1. 是否使用中文（必须包含中文字符）\n");
++        sb.append("2. 是否符合").append(type).append("的基本格式：\n");
++        sb.append("   - 五言绝句：4句，每句5字\n");
++        sb.append("   - 七言绝句：4句，每句7字\n");
++        sb.append("   - 五言律诗：8句，每句5字\n");
++        sb.append("   - 七言律诗：8句，每句7字\n");
++        sb.append("   - 词牌：符合该词牌的基本句式和字数\n");
++        sb.append("   - 现代诗：自由格式，但应有诗意\n");
++        sb.append("   - 古体诗：格式自由，但应有古风\n");
++        sb.append("3. 是否有基本的押韵或平仄意识\n");
++        sb.append("4. 内容是否完整，是否有意义\n\n");
++
+         sb.append("评分维度（每项满分20分）：格律合规、意境营造、炼字用词、情感真挚、创意创新。\n");
+-        sb.append("要求：\n");
+-        sb.append("1. 基于诗词内容给出确定性的分数，避免模糊区间\n");
+-        sb.append("2. 同一首诗（哈希值：").append(hash).append("）每次评分结果应保持一致，差异不超过3分\n");
+-        sb.append("3. 仅返回JSON，不要任何其他文字，格式如下：\n");
+-        sb.append("{\"total_score\":85,\"level\":\"佳作\",");
+-        sb.append("\"dimensions\":[{\"name\":\"格律\",\"score\":18,\"comment\":\"格律工整\"},");
+-        sb.append("{\"name\":\"意境\",\"score\":17,\"comment\":\"画面清新\"},");
+-        sb.append("{\"name\":\"用词\",\"score\":15,\"comment\":\"用词精准\"},");
+-        sb.append("{\"name\":\"情感\",\"score\":18,\"comment\":\"情感真挚\"},");
+-        sb.append("{\"name\":\"创新\",\"score\":14,\"comment\":\"立意常规\"}],");
+-        sb.append("\"overall_comment\":\"总体评价\",\"suggestions\":\"修改建议\"}");
++
++        sb.append("【输出要求】\n");
++        sb.append("请严格按照以下JSON格式返回，不要有任何其他文字：\n");
++        sb.append("{\n");
++        sb.append("  \"valid\": true,  // true=符合诗词规范，false=不符合\n");
++        sb.append("  \"format_message\": \"\",  // 格式提示信息，如果valid为false，这里说明具体问题\n");
++        sb.append("  \"total_score\": 85,\n");
++        sb.append("  \"level\": \"佳作\",\n");
++        sb.append("  \"dimensions\": [\n");
++        sb.append("    {\"name\": \"格律\", \"score\": 18, \"comment\": \"格律工整\"},\n");
++        sb.append("    {\"name\": \"意境\", \"score\": 17, \"comment\": \"画面清新\"},\n");
++        sb.append("    {\"name\": \"用词\", \"score\": 15, \"comment\": \"用词精准\"},\n");
++        sb.append("    {\"name\": \"情感\", \"score\": 18, \"comment\": \"情感真挚\"},\n");
++        sb.append("    {\"name\": \"创新\", \"score\": 14, \"comment\": \"立意常规\"}\n");
++        sb.append("  ],\n");
++        sb.append("  \"overall_comment\": \"总体评价\",\n");
++        sb.append("  \"suggestions\": \"修改建议\"\n");
++        sb.append("}\n\n");
++
++        sb.append("注意：如果valid为false，total_score可以给一个基础分（如30-50分），并在overall_comment和suggestions中给出改进建议。");
++
+         return sb.toString();
+     }
+ }
+\ No newline at end of file
+Index: app/src/main/res/layout/activity_poem_score.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/layout/activity_poem_score.xml b/app/src/main/res/layout/activity_poem_score.xml
+--- a/app/src/main/res/layout/activity_poem_score.xml	(revision 3ce90e00e869521a0919f9c59a001ba252d2fcf5)
++++ b/app/src/main/res/layout/activity_poem_score.xml	(revision 0ab82366ce030c5b4811b6fd6a4cb7fcf69158e7)
+@@ -174,21 +174,23 @@
+                     android:textColor="#FF6B6B"
+                     android:layout_marginStart="4dp"/>
+             </LinearLayout>
+-            <!-- 在等级标签后面，分项得分前面添加 -->
++
++            <!-- 详细分数行（由代码动态更新） -->
+             <TextView
+                 android:id="@+id/text_score_detail"
+                 android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+-                android:text="格律：18/20  意境：17/20  用词：15/20  情感：18/20  创新：14/20"
++                android:text="格律：0/100  意境：0/100  用词：0/100  情感：0/100  创新：0/100"
+                 android:textSize="14sp"
+                 android:textColor="#555555"
+                 android:layout_marginBottom="16dp"/>
++
+             <!-- 等级标签 -->
+             <TextView
+                 android:id="@+id/text_level"
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+-                android:text="佳作"
++                android:text="待改进"
+                 android:textSize="14sp"
+                 android:textColor="#FFFFFF"
+                 android:background="#FF6B6B"
+@@ -228,14 +230,14 @@
+                     android:layout_height="8dp"
+                     android:layout_weight="1"
+                     android:layout_gravity="center_vertical"
+-                    android:progress="80"
++                    android:progress="0"
++                    android:max="100"
+                     android:layout_marginHorizontal="8dp"/>
+ 
+                 <TextView
+                     android:id="@+id/text_meter_score"
+-                    android:layout_width="40dp"
++                    android:layout_width="60dp"
+                     android:layout_height="wrap_content"
+-                    android:text="18/20"
+                     android:textSize="13sp"
+                     android:textColor="#333333"
+                     android:gravity="end"/>
+@@ -262,14 +264,14 @@
+                     android:layout_height="8dp"
+                     android:layout_weight="1"
+                     android:layout_gravity="center_vertical"
+-                    android:progress="85"
++                    android:progress="0"
++                    android:max="100"
+                     android:layout_marginHorizontal="8dp"/>
+ 
+                 <TextView
+                     android:id="@+id/text_imagery_score"
+-                    android:layout_width="40dp"
++                    android:layout_width="60dp"
+                     android:layout_height="wrap_content"
+-                    android:text="17/20"
+                     android:textSize="13sp"
+                     android:textColor="#333333"
+                     android:gravity="end"/>
+@@ -296,14 +298,14 @@
+                     android:layout_height="8dp"
+                     android:layout_weight="1"
+                     android:layout_gravity="center_vertical"
+-                    android:progress="75"
++                    android:progress="0"
++                    android:max="100"
+                     android:layout_marginHorizontal="8dp"/>
+ 
+                 <TextView
+                     android:id="@+id/text_word_score"
+-                    android:layout_width="40dp"
++                    android:layout_width="60dp"
+                     android:layout_height="wrap_content"
+-                    android:text="15/20"
+                     android:textSize="13sp"
+                     android:textColor="#333333"
+                     android:gravity="end"/>
+@@ -330,14 +332,14 @@
+                     android:layout_height="8dp"
+                     android:layout_weight="1"
+                     android:layout_gravity="center_vertical"
+-                    android:progress="90"
++                    android:progress="0"
++                    android:max="100"
+                     android:layout_marginHorizontal="8dp"/>
+ 
+                 <TextView
+                     android:id="@+id/text_emotion_score"
+-                    android:layout_width="40dp"
++                    android:layout_width="60dp"
+                     android:layout_height="wrap_content"
+-                    android:text="18/20"
+                     android:textSize="13sp"
+                     android:textColor="#333333"
+                     android:gravity="end"/>
+@@ -364,14 +366,14 @@
+                     android:layout_height="8dp"
+                     android:layout_weight="1"
+                     android:layout_gravity="center_vertical"
+-                    android:progress="70"
++                    android:progress="0"
++                    android:max="100"
+                     android:layout_marginHorizontal="8dp"/>
+ 
+                 <TextView
+                     android:id="@+id/text_creative_score"
+-                    android:layout_width="40dp"
++                    android:layout_width="60dp"
+                     android:layout_height="wrap_content"
+-                    android:text="14/20"
+                     android:textSize="13sp"
+                     android:textColor="#333333"
+                     android:gravity="end"/>
+@@ -397,7 +399,7 @@
+                 android:id="@+id/text_comment"
+                 android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+-                android:text="此诗格律工整，对仗较为严谨..."
++                android:text=""
+                 android:textSize="14sp"
+                 android:textColor="#555555"
+                 android:lineSpacingMultiplier="1.6"
+@@ -417,7 +419,7 @@
+                 android:id="@+id/text_suggestion"
+                 android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+-                android:text="建议在颔联处加强意象的对比..."
++                android:text=""
+                 android:textSize="14sp"
+                 android:textColor="#555555"
+                 android:lineSpacingMultiplier="1.6"/>
