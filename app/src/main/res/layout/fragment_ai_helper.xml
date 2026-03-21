@@ -6,67 +6,147 @@
     android:padding="20dp"
     android:background="@drawable/aii_helper">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="输入情感/主题："
-        android:textSize="18sp"
-        android:textColor="#000000"
-        android:textStyle="bold"/>
+    <!-- 顶部装饰条 -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="4dp"
+        android:background="@drawable/ai_header_gradient"
+        android:layout_marginBottom="30dp"/>
 
-    <EditText
-        android:id="@+id/et_emotion"
+    <!-- 标题区域 -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:background="@drawable/edit_text_background"
-        android:padding="12dp"
-        android:hint="例如：思乡、壮志未酬、物是人非、春日"
-        android:textSize="16sp"
-        android:maxLines="1"
-        android:inputType="text"/>
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="30dp">
 
-    <Button
-        android:id="@+id/btn_match"
-        android:layout_width="wrap_content"
-        android:layout_height="48dp"
-        android:text="匹配经典诗词"
-        android:textSize="16sp"
-        android:layout_marginTop="20dp"
-        android:layout_gravity="center_horizontal"
-        android:background="@drawable/button_background"
-        android:textColor="#FFFFFF"
-        android:paddingStart="30dp"
-        android:paddingEnd="30dp"/>
-    <Button
-        android:id="@+id/btn_qa"
-        android:layout_width="wrap_content"
-        android:layout_height="48dp"
-        android:text="AI问答助手"
-        android:textSize="16sp"
-        android:layout_marginTop="10dp"
-        android:layout_gravity="center_horizontal"
-        android:background="@drawable/button_background"
-        android:textColor="#FFFFFF"
-        android:paddingStart="30dp"
-        android:paddingEnd="30dp"/>
+        <ImageView
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@drawable/ai_helper"
+            android:tint="#4A90E2"
+            android:layout_marginEnd="12dp"/>
 
-    <!-- 用ScrollView包裹TextView，实现滚动效果 -->
-    <ScrollView
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="AI诗词助手"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:textColor="#357ABD"
+            android:fontFamily="@font/kaiti"/>
+    </LinearLayout>
+
+    <!-- 输入区域卡片 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/ai_input_card"
+        android:padding="24dp"
+        android:layout_marginBottom="24dp"
+        android:elevation="4dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="输入情感或主题"
+            android:textSize="18sp"
+            android:textColor="#357ABD"
+            android:fontFamily="@font/kaiti"
+            android:layout_marginBottom="12dp"/>
+
+        <EditText
+            android:id="@+id/et_emotion"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/ai_edit_background"
+            android:padding="16dp"
+            android:hint="例如：思乡、壮志未酬、物是人非、春日"
+            android:textSize="16sp"
+            android:maxLines="2"
+            android:inputType="textMultiLine"
+            android:fontFamily="@font/kaiti"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="20dp">
+
+            <Button
+                android:id="@+id/btn_match"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:text="匹配经典诗词"
+                android:textSize="16sp"
+                android:background="@drawable/ai_button_background_selector"
+                android:textColor="#FFFFFF"
+                android:layout_marginEnd="12dp"
+                android:fontFamily="@font/kaiti"/>
+
+            <Button
+                android:id="@+id/btn_qa"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:text="AI问答助手"
+                android:textSize="16sp"
+                android:background="@drawable/ai_button_secondary"
+                android:textColor="#FFFFFF"
+                android:fontFamily="@font/kaiti"/>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- 结果显示区域 -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:layout_marginTop="20dp"
-        android:background="@drawable/result_background"
-        android:padding="16dp"
-        android:scrollbars="vertical">
+        android:orientation="vertical"
+        android:background="@drawable/ai_answer_card"
+        android:padding="24dp"
+        android:elevation="4dp">
 
-        <TextView
-            android:id="@+id/tv_result"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="16sp"
-            android:textColor="#333333"
-            android:lineSpacingExtra="4dp"/>
-    </ScrollView>
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/t1"
+                android:tint="#4A90E2"
+                android:layout_marginEnd="8dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="推荐结果"
+                android:textSize="18sp"
+                android:textColor="#357ABD"
+                android:fontFamily="@font/kaiti"/>
+        </LinearLayout>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scrollbars="vertical">
+
+            <TextView
+                android:id="@+id/tv_result"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="17sp"
+                android:textColor="#333333"
+                android:lineSpacingExtra="6dp"
+                android:fontFamily="@font/kaiti"
+                android:padding="4dp"/>
+        </ScrollView>
+    </LinearLayout>
 </LinearLayout>
