@@ -3,46 +3,70 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp"
-    android:background="#F5F5F5">
+    android:padding="20dp"
+    android:background="@drawable/backbg0">
 
-    <TextView
+    <!-- 顶部装饰条 -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="4dp"
+        android:background="@drawable/ai_header_gradient"
+        android:layout_marginBottom="30dp"/>
+
+    <!-- 标题区域 -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="AI诗词创作"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:textColor="#333333"
-        android:gravity="center"
-        android:layout_marginBottom="16dp"/>
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="30dp">
+
+        <ImageView
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@drawable/ai_helper"
+            android:tint="#4A90E2"
+            android:layout_marginEnd="12dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="AI诗词创作"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:textColor="#357ABD"
+            android:fontFamily="@font/kaiti"/>
+    </LinearLayout>
 
     <!-- 功能选择按钮组 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginBottom="16dp">
+        android:layout_marginBottom="24dp">
 
         <Button
             android:id="@+id/btn_ai_generate"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="52dp"
             android:layout_weight="1"
             android:text="AI生成诗词"
-            android:textSize="14sp"
-            android:background="@drawable/button_background"
+            android:textSize="16sp"
+            android:background="@drawable/ai_button_background"
             android:textColor="#FFFFFF"
-            android:layout_marginEnd="8dp"/>
+            android:layout_marginEnd="12dp"
+            android:fontFamily="@font/kaiti"/>
 
         <Button
             android:id="@+id/btn_ai_score"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="52dp"
             android:layout_weight="1"
             android:text="AI诗词打分"
-            android:textSize="14sp"
-            android:background="#95A5A6"
-            android:textColor="#FFFFFF"/>
+            android:textSize="16sp"
+            android:background="@drawable/ai_button_inactive"
+            android:textColor="#FFFFFF"
+            android:fontFamily="@font/kaiti"/>
     </LinearLayout>
 
     <!-- AI生成区域（默认显示） -->
@@ -50,58 +74,60 @@
         android:id="@+id/layout_generate"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="8dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="体裁："
-                android:textSize="16sp"
-                android:textColor="#666666"/>
-
-            <Spinner
-                android:id="@+id/spinner_style"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="8dp"
-                android:layout_marginStart="8dp"/>
-        </LinearLayout>
+        android:orientation="vertical"
+        android:background="@drawable/ai_input_card"
+        android:padding="24dp"
+        android:layout_marginBottom="24dp"
+        android:elevation="4dp">
 
         <TextView
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="创作主题或关键词："
-            android:textSize="16sp"
-            android:textColor="#666666"
-            android:layout_marginBottom="8dp"/>
+            android:text="请选择诗词体裁"
+            android:textSize="18sp"
+            android:textColor="#357ABD"
+            android:fontFamily="@font/kaiti"
+            android:layout_marginBottom="16dp"/>
+
+        <Spinner
+            android:id="@+id/spinner_style"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:background="@drawable/ai_edit_background"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:layout_marginBottom="20dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="创作主题或关键词"
+            android:textSize="18sp"
+            android:textColor="#357ABD"
+            android:fontFamily="@font/kaiti"
+            android:layout_marginBottom="12dp"/>
 
         <EditText
             android:id="@+id/input_keywords"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:background="@drawable/edit_text_background"
+            android:padding="16dp"
+            android:background="@drawable/ai_edit_background"
             android:hint="例如：思乡、爱情、友情等"
             android:textSize="16sp"
-            android:maxLines="1"
-            android:layout_marginBottom="16dp"/>
+            android:maxLines="2"
+            android:layout_marginBottom="20dp"
+            android:fontFamily="@font/kaiti"/>
 
         <Button
             android:id="@+id/btn_generate"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="52dp"
             android:text="开始创作"
-            android:textSize="16sp"
-            android:padding="12dp"
-            android:background="@drawable/button_background"
+            android:textSize="18sp"
+            android:background="@drawable/ai_button_background"
             android:textColor="#FFFFFF"
-            android:layout_marginBottom="16dp"/>
+            android:fontFamily="@font/kaiti"/>
     </LinearLayout>
 
     <!-- 评分入口提示 -->
@@ -110,47 +136,83 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
+        android:background="@drawable/ai_input_card"
+        android:padding="24dp"
+        android:layout_marginBottom="24dp"
+        android:elevation="4dp"
         android:visibility="gone">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="点击下方按钮进入专业诗词评分页面，AI将为您的原创诗词进行多维度评析"
-            android:textSize="14sp"
-            android:textColor="#666666"
+            android:textSize="16sp"
+            android:textColor="#357ABD"
             android:gravity="center"
-            android:layout_marginBottom="12dp"/>
+            android:lineSpacingExtra="4dp"
+            android:layout_marginBottom="20dp"
+            android:fontFamily="@font/kaiti"/>
 
         <Button
             android:id="@+id/btn_go_score"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="52dp"
             android:text="进入诗词评分"
-            android:textSize="16sp"
-            android:padding="12dp"
-            android:background="@drawable/button_background"
+            android:textSize="18sp"
+            android:background="@drawable/ai_button_background"
             android:textColor="#FFFFFF"
-            android:layout_marginBottom="16dp"/>
+            android:fontFamily="@font/kaiti"/>
     </LinearLayout>
 
     <!-- 结果显示区域 -->
-    <ScrollView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:background="@drawable/result_background"
-        android:padding="16dp">
+        android:orientation="vertical"
+        android:background="@drawable/ai_answer_card"
+        android:padding="24dp"
+        android:elevation="4dp">
 
-        <TextView
-            android:id="@+id/text_result"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="start"
-            android:textSize="18sp"
-            android:textColor="#333333"
-            android:lineSpacingMultiplier="1.8"
-            android:textAlignment="viewStart"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"/>
-    </ScrollView>
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/t1"
+                android:tint="#4A90E2"
+                android:layout_marginEnd="8dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="AI创作结果"
+                android:textSize="18sp"
+                android:textColor="#357ABD"
+                android:fontFamily="@font/kaiti"/>
+        </LinearLayout>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scrollbars="vertical">
+
+            <TextView
+                android:id="@+id/text_result"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="start"
+                android:textSize="19sp"
+                android:textColor="#333333"
+                android:lineSpacingMultiplier="1.8"
+                android:textAlignment="viewStart"
+                android:padding="4dp"
+                android:fontFamily="@font/kaiti"/>
+        </ScrollView>
+    </LinearLayout>
 </LinearLayout>

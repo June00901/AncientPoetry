@@ -11,24 +11,27 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:gravity="center"
-        android:padding="30dp">
+        android:paddingTop="40dp"
+        android:paddingBottom="30dp"
+        android:paddingHorizontal="20dp"
+        android:background="@drawable/me_header_background">
 
         <!-- 头像容器 -->
         <FrameLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:padding="10dp">
+            android:layout_marginTop="10dp">
 
             <ImageView
                 android:id="@+id/iv_avatar"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
+                android:layout_width="90dp"
+                android:layout_height="90dp"
                 android:src="@drawable/backbg"
                 android:scaleType="centerCrop"
                 android:clickable="true"
                 android:focusable="true"
-                android:background="?attr/selectableItemBackgroundBorderless"/>
+                android:background="@drawable/avatar_circle_border"
+                android:padding="3dp"/>
 
         </FrameLayout>
 
@@ -37,7 +40,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginTop="10dp">
+            android:layout_marginTop="15dp"
+            android:gravity="center_vertical">
 
             <!-- 账号标签 -->
             <TextView
@@ -45,8 +49,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="账号："
-                android:textSize="16sp"
-                android:textColor="#333333"
+                android:textSize="15sp"
+                android:textColor="#FFFFFF"
+                android:alpha="0.9"
                 android:fontFamily="@font/kaiti"/>
 
             <!-- 账号内容 -->
@@ -54,10 +59,11 @@
                 android:id="@+id/tv_username"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="16sp"
-                android:textColor="#333333"
-                android:layout_marginEnd="20dp"
-                android:layout_marginRight="20dp"
+                android:textSize="15sp"
+                android:textColor="#FFFFFF"
+                android:layout_marginEnd="15dp"
+                android:layout_marginRight="15dp"
+                android:alpha="0.95"
                 android:fontFamily="@font/kaiti"/>
 
             <!-- 昵称标签 -->
@@ -66,8 +72,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="昵称："
-                android:textSize="16sp"
-                android:textColor="#333333"
+                android:textSize="15sp"
+                android:textColor="#FFFFFF"
+                android:alpha="0.9"
                 android:fontFamily="@font/kaiti"/>
 
             <!-- 昵称内容 -->
@@ -76,12 +83,17 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="小八"
-                android:textSize="16sp"
-                android:textColor="#333333"
+                android:textSize="15sp"
+                android:textColor="#FFFFFF"
                 android:clickable="true"
                 android:focusable="true"
-                android:background="?attr/selectableItemBackground"
-                android:padding="4dp"
+                android:background="@drawable/nickname_edit_background"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="3dp"
+                android:paddingBottom="3dp"
+                android:layout_marginStart="3dp"
+                android:alpha="0.95"
                 android:fontFamily="@font/kaiti"/>
 
         </LinearLayout>
@@ -92,24 +104,27 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:layout_marginTop="20dp"
-        android:layout_marginHorizontal="16dp">
+        android:layout_marginTop="-20dp"
+        android:layout_marginHorizontal="16dp"
+        android:paddingBottom="20dp">
 
         <!-- 我的收藏 -->
         <LinearLayout
             android:id="@+id/ll_my_collection"
             android:layout_width="match_parent"
-            android:layout_height="55dp"
+            android:layout_height="60dp"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:background="@drawable/searchyuanjiao"
-            android:paddingHorizontal="20dp"
-            android:layout_marginBottom="10dp">
+            android:background="@drawable/me_item_background"
+            android:paddingHorizontal="24dp"
+            android:layout_marginBottom="12dp"
+            android:elevation="2dp">
 
             <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/t1"/>
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:src="@drawable/t1"
+                android:tint="#4A90E2"/>
 
             <TextView
                 android:layout_width="0dp"
@@ -118,24 +133,27 @@
                 android:gravity="center"
                 android:text="我的收藏"
                 android:textSize="16sp"
-                android:textColor="#333333"/>
+                android:textColor="#333333"
+                android:fontFamily="@font/kaiti"/>
         </LinearLayout>
 
         <!-- 学习笔记 -->
         <LinearLayout
             android:id="@+id/ll_study_notes"
             android:layout_width="match_parent"
-            android:layout_height="55dp"
+            android:layout_height="60dp"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:background="@drawable/searchyuanjiao"
-            android:paddingHorizontal="20dp"
-            android:layout_marginBottom="10dp">
+            android:background="@drawable/me_item_background"
+            android:paddingHorizontal="24dp"
+            android:layout_marginBottom="12dp"
+            android:elevation="2dp">
 
             <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/t2"/>
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:src="@drawable/t2"
+                android:tint="#5DADE2"/>
 
             <TextView
                 android:layout_width="0dp"
@@ -144,24 +162,27 @@
                 android:gravity="center"
                 android:text="学习笔记"
                 android:textSize="16sp"
-                android:textColor="#333333"/>
+                android:textColor="#333333"
+                android:fontFamily="@font/kaiti"/>
         </LinearLayout>
 
         <!-- 修改密码 -->
         <LinearLayout
             android:id="@+id/ll_change_password"
             android:layout_width="match_parent"
-            android:layout_height="55dp"
+            android:layout_height="60dp"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:background="@drawable/searchyuanjiao"
-            android:paddingHorizontal="20dp"
-            android:layout_marginBottom="10dp">
+            android:background="@drawable/me_item_background"
+            android:paddingHorizontal="24dp"
+            android:layout_marginBottom="12dp"
+            android:elevation="2dp">
 
             <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/t3"/>
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:src="@drawable/t3"
+                android:tint="#85C1E9"/>
 
             <TextView
                 android:layout_width="0dp"
@@ -170,24 +191,27 @@
                 android:gravity="center"
                 android:text="修改密码"
                 android:textSize="16sp"
-                android:textColor="#333333"/>
+                android:textColor="#333333"
+                android:fontFamily="@font/kaiti"/>
         </LinearLayout>
 
         <!-- 分享软件 -->
         <LinearLayout
             android:id="@+id/ll_share_app"
             android:layout_width="match_parent"
-            android:layout_height="55dp"
+            android:layout_height="60dp"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:background="@drawable/searchyuanjiao"
-            android:paddingHorizontal="20dp"
-            android:layout_marginBottom="10dp">
+            android:background="@drawable/me_item_background"
+            android:paddingHorizontal="24dp"
+            android:layout_marginBottom="12dp"
+            android:elevation="2dp">
 
             <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/t4"/>
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:src="@drawable/t4"
+                android:tint="#AED6F1"/>
 
             <TextView
                 android:layout_width="0dp"
@@ -196,23 +220,26 @@
                 android:gravity="center"
                 android:text="分享软件"
                 android:textSize="16sp"
-                android:textColor="#333333"/>
+                android:textColor="#333333"
+                android:fontFamily="@font/kaiti"/>
         </LinearLayout>
 
         <!-- 退出登录 -->
         <LinearLayout
             android:id="@+id/ll_logout"
             android:layout_width="match_parent"
-            android:layout_height="55dp"
+            android:layout_height="60dp"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:background="@drawable/searchyuanjiao"
-            android:paddingHorizontal="20dp">
+            android:background="@drawable/me_logout_background"
+            android:paddingHorizontal="24dp"
+            android:elevation="2dp">
 
             <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/t5"/>
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:src="@drawable/t5"
+                android:tint="#3498DB"/>
 
             <TextView
                 android:id="@+id/tv_logout"
@@ -222,7 +249,8 @@
                 android:gravity="center"
                 android:text="退出登录"
                 android:textSize="16sp"
-                android:textColor="#FF4444"/>
+                android:textColor="#3498DB"
+                android:fontFamily="@font/kaiti"/>
         </LinearLayout>
 
     </LinearLayout>
