@@ -81,10 +81,30 @@
 
         <activity android:name=".AiQAActivity" />
 
+        <activity
+            android:name=".AiOnlineSearchActivity"
+            android:label="AI深度联网搜索"
+            android:theme="@style/AppTheme"
+            android:parentActivityName=".MainActivity"/>
+
         <!-- AI诗词评析页面 -->
         <activity
             android:name=".PoemScoreActivity"
             android:label="AI诗词评析"
+            android:theme="@style/AppTheme"
+            android:parentActivityName=".MainActivity"/>
+
+        <!-- AI辅助学习计划页面 -->
+        <activity
+            android:name=".AiStudyPlanActivity"
+            android:label="AI辅助学习计划"
+            android:theme="@style/AppTheme"
+            android:parentActivityName=".MainActivity"/>
+
+        <!-- 学习计划结果页面 -->
+        <activity
+            android:name=".StudyPlanResultActivity"
+            android:label="学习计划详情"
             android:theme="@style/AppTheme"
             android:parentActivityName=".MainActivity"/>
 

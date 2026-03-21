@@ -1,13 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
     android:orientation="vertical"
-    android:background="@drawable/backbg0"
     android:padding="20dp"
-    tools:context=".MainActivity">
+    android:background="@drawable/backbg0">
 
     <!-- 顶部装饰条 -->
     <View
@@ -27,14 +24,14 @@
         <ImageView
             android:layout_width="36dp"
             android:layout_height="36dp"
-            android:src="@drawable/find"
+            android:src="@drawable/ai_helper"
             android:tint="#4A90E2"
             android:layout_marginEnd="12dp"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="古诗词搜索"
+            android:text="AI深度联网搜索"
             android:textSize="28sp"
             android:textStyle="bold"
             android:textColor="#357ABD"
@@ -54,30 +51,32 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="搜索古诗词"
+            android:text="输入搜索内容"
             android:textSize="18sp"
             android:textColor="#357ABD"
             android:fontFamily="@font/kaiti"
-            android:layout_marginBottom="16dp"/>
+            android:layout_marginBottom="12dp"/>
 
-        <SearchView
-            android:id="@+id/sv"
+        <EditText
+            android:id="@+id/et_search_query"
             android:layout_width="match_parent"
-            android:layout_height="52dp"
+            android:layout_height="wrap_content"
             android:background="@drawable/ai_edit_background"
-            android:iconifiedByDefault="false"
-            android:queryBackground="@null"
-            android:queryHint="请输入搜索古诗词名、作者或诗句"
+            android:padding="16dp"
+            android:hint="例如：静夜思、李白、床前明月光"
+            android:textSize="16sp"
+            android:maxLines="3"
+            android:inputType="textMultiLine"
             android:fontFamily="@font/kaiti"
-            android:layout_marginBottom="16dp"/>
+            android:layout_marginBottom="20dp"/>
 
         <Button
-            android:id="@+id/btn_ai_search"
+            android:id="@+id/btn_search"
             android:layout_width="match_parent"
             android:layout_height="52dp"
-            android:text="AI深度联网搜索"
-            android:textSize="16sp"
-            android:background="@drawable/ai_button_secondary"
+            android:text="开始深度搜索"
+            android:textSize="18sp"
+            android:background="@drawable/ai_button_background"
             android:textColor="#FFFFFF"
             android:fontFamily="@font/kaiti"/>
     </LinearLayout>
@@ -115,10 +114,21 @@
                 android:fontFamily="@font/kaiti"/>
         </LinearLayout>
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recycler_view"
+        <ScrollView
+            android:id="@+id/scroll_view"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
-    </LinearLayout>
+            android:layout_height="match_parent"
+            android:scrollbars="vertical">
 
+            <TextView
+                android:id="@+id/tv_result"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="17sp"
+                android:textColor="#333333"
+                android:lineSpacingExtra="6dp"
+                android:fontFamily="@font/kaiti"
+                android:padding="4dp"/>
+        </ScrollView>
+    </LinearLayout>
 </LinearLayout>

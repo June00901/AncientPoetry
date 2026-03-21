@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.SearchView;
 
 import java.util.List;
@@ -46,6 +47,16 @@ public class TabFragment_Find extends Fragment {
         database = new PlaceDatabase(getContext(), PlaceDatabase.DATABASE_NAME, null, 1);
         mlist = mView.findViewById(R.id.recycler_view);
         showStagger();
+
+        Button btnAiSearch = mView.findViewById(R.id.btn_ai_search);
+
+        btnAiSearch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getActivity(), AiOnlineSearchActivity.class);
+                startActivity(intent);
+            }
+        });
 
         // 设置点击事件
         adapter.setOnItemClickListener(new MyAdapter.OnItemClickListener() {

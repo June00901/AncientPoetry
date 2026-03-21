@@ -136,6 +136,15 @@ public class TabFragment_Home extends Fragment {
                 startActivity(intent);
             }
         });
+
+        // AI辅助学习计划按钮点击事件
+        getActivity().findViewById(R.id.card_ai_study_plan).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getActivity(), AiStudyPlanActivity.class);
+                startActivity(intent);
+            }
+        });
     }
 
     @Override

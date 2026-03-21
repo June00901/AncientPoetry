@@ -83,6 +83,60 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
+        <!-- AI辅助学习计划卡片 -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/card_ai_study_plan"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="16dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="6dp"
+            app:cardBackgroundColor="@color/white"
+            android:foreground="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="16dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="AI辅助学习计划"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="#2C3E50"
+                        android:fontFamily="sans-serif-medium"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="定制专属古诗词学习方案"
+                        android:textSize="13sp"
+                        android:textColor="#7F8C8D"/>
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_poetry_logo"
+                    android:background="@drawable/ai_button_background"
+                    android:padding="10dp"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
         <!-- 第一行情感卡片（两列） -->
         <LinearLayout
             android:layout_width="match_parent"
