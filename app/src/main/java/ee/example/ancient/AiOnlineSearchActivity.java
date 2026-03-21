@@ -18,6 +18,7 @@ import ee.example.ancient.utils.PoemApiClient;
 public class AiOnlineSearchActivity extends AppCompatActivity {
 
     private EditText etSearchQuery;
+    private EditText etDescSearch;
     private Button btnSearch;
     private TextView tvResult;
     private ScrollView scrollView;
@@ -30,6 +31,7 @@ public class AiOnlineSearchActivity extends AppCompatActivity {
         setContentView(R.layout.activity_ai_online_search);
 
         etSearchQuery = findViewById(R.id.et_search_query);
+        etDescSearch = findViewById(R.id.et_desc_search);
         btnSearch = findViewById(R.id.btn_search);
         tvResult = findViewById(R.id.tv_result);
         scrollView = findViewById(R.id.scroll_view);
@@ -41,11 +43,17 @@ public class AiOnlineSearchActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 String query = etSearchQuery.getText().toString().trim();
-                if (TextUtils.isEmpty(query)) {
-                    Toast.makeText(AiOnlineSearchActivity.this, "请输入搜索内容", Toast.LENGTH_SHORT).show();
-                    return;
+                String descQuery = etDescSearch.getText().toString().trim();
+                
+                if (!TextUtils.isEmpty(descQuery)) {
+                    // 优先使用描述型查找
+                    performDescSearch(descQuery);
+                } else if (!TextUtils.isEmpty(query)) {
+                    // 使用普通搜索
+                    performAiSearch(query);
+                } else {
+                    Toast.makeText(AiOnlineSearchActivity.this, "请输入搜索内容或描述", Toast.LENGTH_SHORT).show();
                 }
-                performAiSearch(query);
             }
         });
     }
@@ -91,6 +99,53 @@ public class AiOnlineSearchActivity extends AppCompatActivity {
             @Override
             public void onError(String error) {
                 tvResult.setText("搜索失败，请稍后重试。\n\n错误信息：" + error);
+                btnSearch.setEnabled(true);
+                Toast.makeText(AiOnlineSearchActivity.this, "API调用失败", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void performDescSearch(String descQuery) {
+        tvResult.setText("🔍 正在根据描述查找古诗「" + descQuery + "」...\n⏳ 请稍候（约5-8秒）");
+        btnSearch.setEnabled(false);
+
+        String prompt = "你是一位博学的古诗词研究专家，擅长根据描述和意境找到对应的古诗词。\n\n"
+                + "用户描述：「" + descQuery + "」\n\n"
+                + "【核心要求】\n"
+                + "1. 根据用户的描述，找出最匹配的古诗词\n"
+                + "2. 如果描述对应多首诗词，列出最相关的1-3首\n"
+                + "3. 解释为什么这首诗词符合用户的描述\n"
+                + "4. 提供诗词的完整信息（诗名、作者、朝代、全文）\n"
+                + "5. 给出诗词的赏析和名句解读\n\n"
+                + "【输出格式】\n\n"
+                + "【查找结果】\n"
+                + "根据您的描述「" + descQuery + "」，为您找到以下诗词：\n\n"
+                + "【匹配诗词】\n"
+                + "诗名：《》\n"
+                + "作者：\n"
+                + "朝代：\n\n"
+                + "【全文】\n"
+                + "（诗词全文，注意换行，保持原格式）\n\n"
+                + "【匹配说明】\n"
+                + "（解释这首诗词为什么符合用户的描述，100字左右）\n\n"
+                + "【诗词赏析】\n"
+                + "（详细赏析，80字左右）\n\n"
+                + "【名句解读】\n"
+                + "（解读与描述相关的名句）";
+
+        poemApiClient.callApiWithPrompt(prompt, new PoemApiClient.PoemCallback() {
+            @Override
+            public void onSuccess(String result) {
+                tvResult.setText(result);
+                btnSearch.setEnabled(true);
+                mainHandler.postDelayed(() -> {
+                    scrollView.fullScroll(ScrollView.FOCUS_UP);
+                }, 100);
+            }
+
+            @Override
+            public void onError(String error) {
+                tvResult.setText("查找失败，请稍后重试。\n\n错误信息：" + error);
                 btnSearch.setEnabled(true);
                 Toast.makeText(AiOnlineSearchActivity.this, "API调用失败", Toast.LENGTH_SHORT).show();
             }

@@ -137,7 +137,7 @@
                 android:fontFamily="@font/kaiti"/>
         </LinearLayout>
 
-        <!-- 学习笔记 -->
+        <!-- 学习笔记与计划 -->
         <LinearLayout
             android:id="@+id/ll_study_notes"
             android:layout_width="match_parent"
@@ -160,7 +160,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:gravity="center"
-                android:text="学习笔记"
+                android:text="学习笔记与计划"
                 android:textSize="16sp"
                 android:textColor="#333333"
                 android:fontFamily="@font/kaiti"/>

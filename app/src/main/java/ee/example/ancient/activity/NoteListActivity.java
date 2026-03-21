@@ -3,8 +3,16 @@ package ee.example.ancient.activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.PopupWindow;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -15,6 +23,7 @@ import ee.example.ancient.PlaceDatabase;
 import ee.example.ancient.R;
 import ee.example.ancient.adapter.NoteAdapter;
 import ee.example.ancient.model.Note;
+import ee.example.ancient.utils.PoemApiClient;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,6 +31,9 @@ public class NoteListActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private NoteAdapter adapter;
     private PlaceDatabase database;
+    private PoemApiClient poemApiClient;
+    private Handler mainHandler;
+    private List<Note> studyPlanNotes;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,6 +41,8 @@ public class NoteListActivity extends AppCompatActivity {
         setContentView(R.layout.activity_note_list);
 
         database = new PlaceDatabase(this, PlaceDatabase.DATABASE_NAME, null, 1);
+        poemApiClient = new PoemApiClient();
+        mainHandler = new Handler(Looper.getMainLooper());
         
         // 返回按钮
         findViewById(R.id.iv_back).setOnClickListener(v -> finish());
@@ -43,6 +57,9 @@ public class NoteListActivity extends AppCompatActivity {
             Intent intent = new Intent(NoteListActivity.this, AddNoteActivity.class);
             startActivity(intent);
         });
+        
+        // 应用学习计划按钮
+        findViewById(R.id.btn_apply_plan).setOnClickListener(v -> showStudyPlanDialog());
         
         // 初始化RecyclerView
         recyclerView = findViewById(R.id.recyclerView);
@@ -105,6 +122,108 @@ public class NoteListActivity extends AppCompatActivity {
         } else {
             Toast.makeText(this, "删除失败", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void showStudyPlanDialog() {
+        if (!Data.sta_np || Data.userId == null) {
+            Toast.makeText(this, "请先登录", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // 查找所有学习计划
+        studyPlanNotes = database.getUserNotes(Data.userId.intValue());
+        List<Note> plans = new ArrayList<>();
+        for (Note note : studyPlanNotes) {
+            if (note.getTitle() != null && note.getTitle().contains("学习计划")) {
+                plans.add(note);
+            }
+        }
+
+        if (plans.isEmpty()) {
+            Toast.makeText(this, "还没有学习计划，请先在首页生成", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // 创建对话框选择学习计划
+        String[] planTitles = new String[plans.size()];
+        for (int i = 0; i < plans.size(); i++) {
+            planTitles[i] = plans.get(i).getTitle();
+        }
+
+        new AlertDialog.Builder(this)
+            .setTitle("选择学习计划")
+            .setItems(planTitles, (dialog, which) -> {
+                showProgressDialog(plans.get(which));
+            })
+            .setNegativeButton("取消", null)
+            .show();
+    }
+
+    private void showProgressDialog(Note studyPlan) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("应用学习计划");
+        
+        // 创建输入框
+        EditText etProgress = new EditText(this);
+        etProgress.setHint("例如：学习第3天");
+        etProgress.setPadding(50, 30, 50, 30);
+        
+        builder.setView(etProgress);
+        builder.setPositiveButton("确定", (dialog, which) -> {
+            String progress = etProgress.getText().toString().trim();
+            if (progress.isEmpty()) {
+                Toast.makeText(this, "请输入学习进度", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            generateTodayPlan(studyPlan, progress);
+        });
+        builder.setNegativeButton("取消", null);
+        builder.show();
+    }
+
+    private void generateTodayPlan(Note studyPlan, String progress) {
+        // 显示加载提示
+        Toast.makeText(this, "AI正在生成今日学习计划...", Toast.LENGTH_SHORT).show();
+
+        String prompt = "你是一位专业的古诗词学习规划师，根据以下信息生成今日的简单学习执行方案。\n\n"
+                + "【学习计划内容】\n"
+                + studyPlan.getContent() + "\n\n"
+                + "【当前学习进度】\n"
+                + progress + "\n\n"
+                + "【输出要求】\n"
+                + "1. 生成今日的具体学习任务\n"
+                + "2. 任务要简单明确、切实可行\n"
+                + "3. 控制在200字以内\n"
+                + "4. 使用简洁的列表格式\n"
+                + "5. 不要包含冗长的解释\n\n"
+                + "【输出格式】\n\n"
+                + "## 今日学习任务\n"
+                + "- 任务1\n"
+                + "- 任务2\n"
+                + "- 任务3";
+
+        poemApiClient.callApiWithPrompt(prompt, new PoemApiClient.PoemCallback() {
+            @Override
+            public void onSuccess(String result) {
+                mainHandler.post(() -> showTodayPlanPopup(result));
+            }
+
+            @Override
+            public void onError(String error) {
+                mainHandler.post(() -> {
+                    Toast.makeText(NoteListActivity.this, "生成失败：" + error, Toast.LENGTH_LONG).show();
+                });
+            }
+        });
+    }
+
+    private void showTodayPlanPopup(String plan) {
+        new AlertDialog.Builder(this)
+            .setTitle("📅 今日学习计划")
+            .setMessage(plan)
+            .setPositiveButton("确定", null)
+            .setCancelable(true)
+            .show();
     }
 
     @Override

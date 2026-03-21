@@ -68,7 +68,48 @@
             android:maxLines="3"
             android:inputType="textMultiLine"
             android:fontFamily="@font/kaiti"
-            android:layout_marginBottom="20dp"/>
+            android:layout_marginBottom="16dp"/>
+
+        <!-- 描述型查找古诗 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="#F5F5F5"
+            android:padding="12dp"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="💡 描述型查找古诗"
+                android:textSize="14sp"
+                android:textColor="#E65100"
+                android:textStyle="bold"
+                android:fontFamily="@font/kaiti"
+                android:layout_marginBottom="4dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="忘记诗名？描述内容或意境，AI帮你找"
+                android:textSize="12sp"
+                android:textColor="#757575"
+                android:fontFamily="@font/kaiti"
+                android:layout_marginBottom="8dp"/>
+
+            <EditText
+                android:id="@+id/et_desc_search"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/ai_edit_background"
+                android:padding="14dp"
+                android:hint="例如：有一间大房子庇护很多人"
+                android:textSize="15sp"
+                android:maxLines="3"
+                android:inputType="textMultiLine"
+                android:fontFamily="@font/kaiti"/>
+        </LinearLayout>
 
         <Button
             android:id="@+id/btn_search"

@@ -123,6 +123,12 @@ public class StudyPlanResultActivity extends AppCompatActivity {
         // 生成笔记标题
         String title = "学习计划 - " + expectedTime;
         
+        // 检查是否已经存在相同标题的笔记
+        if (database.isNoteExists(Data.userId.intValue(), title)) {
+            // 已经存在，不重复保存
+            return;
+        }
+        
         // 保存到数据库
         long result = database.addNote(
             Data.userId.intValue(),
@@ -136,9 +142,11 @@ public class StudyPlanResultActivity extends AppCompatActivity {
         );
 
         if (result != -1) {
-            // 保存成功，不显示提示，避免打扰用户
+            // 保存成功，显示提示
+            Toast.makeText(this, "学习计划已保存到学习笔记与计划", Toast.LENGTH_SHORT).show();
         } else {
-            // 保存失败，也不显示提示，避免打扰用户
+            // 保存失败，显示提示
+            Toast.makeText(this, "保存失败，请稍后重试", Toast.LENGTH_SHORT).show();
         }
     }
 }

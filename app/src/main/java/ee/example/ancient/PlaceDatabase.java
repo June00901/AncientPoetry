@@ -711,6 +711,24 @@ public class PlaceDatabase extends SQLiteOpenHelper {
         return rows > 0;
     }
 
+    // 检查是否存在相同标题的笔记
+    public boolean isNoteExists(int userId, String title) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = null;
+        try {
+            String query = "SELECT * FROM " + NOTES_TABLE + " WHERE user_id = ? AND title = ?";
+            cursor = db.rawQuery(query, new String[]{String.valueOf(userId), title});
+            return cursor.getCount() > 0;
+        } catch (Exception e) {
+            Log.e("PlaceDatabase", "Error checking note existence: " + e.getMessage());
+            return false;
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+    }
+
     // 添加笔记
     public long addNote(int userId, String title, String content, String poetryId,
                         String poetryContent, String poetryTranslation, String poetInfo, String theme) {

@@ -69,7 +69,7 @@
 
         <activity
             android:name=".activity.NoteListActivity"
-            android:label="学习笔记" />
+            android:label="学习笔记与计划" />
 
         <activity
             android:name=".activity.NoteEditActivity"
