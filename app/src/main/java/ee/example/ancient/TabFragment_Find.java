@@ -8,10 +8,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.SearchView;
-import android.widget.Toast;
 
 import java.util.List;
-import java.util.ArrayList;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -20,12 +18,6 @@ import android.widget.LinearLayout;
 
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-
-import ee.example.ancient.NewsBean;
 
 //功能：实现搜索古诗词的功能。
 // 主要功能：
@@ -47,14 +39,21 @@ public class TabFragment_Find extends Fragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        database = new PlaceDatabase(getContext(), PlaceDatabase.POETRY_TABLE, null, 1);
-        mlist = getActivity().findViewById(R.id.recycler_view);
+        if (getContext() == null || mView == null) {
+            return;
+        }
+
+        database = new PlaceDatabase(getContext(), PlaceDatabase.DATABASE_NAME, null, 1);
+        mlist = mView.findViewById(R.id.recycler_view);
         showStagger();
-        
+
         // 设置点击事件
         adapter.setOnItemClickListener(new MyAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(View view, int position) {
+                if (getActivity() == null || position < 0 || position >= adapter.getmData().size()) {
+                    return;
+                }
                 PlaceBean data = adapter.getmData().get(position);
                 Intent intent = new Intent();
                 intent.putExtra("id", data.getId());
@@ -73,11 +72,9 @@ public class TabFragment_Find extends Fragment {
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                key = newText;
-                // 直接使用本地数据库进行搜索
-                List<PlaceBean> list = database.find(key);
-                adapter.setNewData(list);
-                return false;
+                key = newText == null ? "" : newText.trim();
+                safeSearchAndBind(key);
+                return true;
             }
         });
 
@@ -114,18 +111,23 @@ public class TabFragment_Find extends Fragment {
     }
 
     private void refreshData() {
-        List<PlaceBean> list = database.find(key);
-        adapter.setNewData(list);
+        safeSearchAndBind(key);
     }
 
     private void loadPoetryData() {
-        // 直接从数据库加载数据
-        List<PlaceBean> list = database.find("");  // 空字符串表示加载所有诗词
-        adapter.setNewData(list);
+        safeSearchAndBind("");
     }
 
     private void searchPoetry(String key) {
-        List<PlaceBean> list = database.find(key);
+        safeSearchAndBind(key);
+    }
+
+    private void safeSearchAndBind(String keyword) {
+        if (database == null || adapter == null) {
+            return;
+        }
+        String searchKey = keyword == null ? "" : keyword.trim();
+        List<PlaceBean> list = database.find(searchKey);
         adapter.setNewData(list);
     }
 

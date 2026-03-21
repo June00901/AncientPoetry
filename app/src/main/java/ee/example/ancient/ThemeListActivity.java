@@ -33,7 +33,7 @@ public class ThemeListActivity extends AppCompatActivity {
 
         try {
             String theme = getIntent().getStringExtra("theme");
-            database = new PlaceDatabase(this, PlaceDatabase.POETRY_TABLE, null, 1);
+            database = new PlaceDatabase(this, PlaceDatabase.DATABASE_NAME, null, 1);
 
             // 设置标题
             TextView titleView = findViewById(R.id.title);

@@ -10,6 +10,11 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,14 +29,20 @@ import ee.example.ancient.model.Note;
 //发现页面 - 数据库
 public class PlaceDatabase extends SQLiteOpenHelper {
 
+    public static final String DATABASE_NAME = "poetry.db";
+    private static final String SHIJING_ASSET_FILE = "shijing.json";
+    private static final String SOURCE_DEFAULT = "default";
+    private static final String SOURCE_SHIJING = "shijing";
     public static final String POETRY_TABLE = "tb_plave";
     public static final String COLLECTIONS_TABLE = "collections";
     public static final String USERS_TABLE = "users";
     public static final String NOTES_TABLE = "notes";
-    private static final int DATABASE_VERSION = 4; // 升级到版本4以修复表结构
+    private static final int DATABASE_VERSION = 5; // 升级到版本5，新增source列并支持诗经导入
+    private final Context appContext;
 
     public PlaceDatabase(@Nullable Context context, @Nullable String name, @Nullable SQLiteDatabase.CursorFactory factory, int version) {
-        super(context, name, factory, DATABASE_VERSION);
+        super(context, DATABASE_NAME, factory, DATABASE_VERSION);
+        appContext = context == null ? null : context.getApplicationContext();
     }
 
     @Override
@@ -80,10 +91,12 @@ public class PlaceDatabase extends SQLiteOpenHelper {
                 "pic TEXT," +
                 "theme TEXT," +
                 "translation TEXT," +
-                "poet_info TEXT" +
+                "poet_info TEXT," +
+                "source TEXT DEFAULT ''" +
                 ")");
 
         addDefaultPoetry(db);
+        importShijingIfNeeded(db);
     }
 
     @Override
@@ -98,6 +111,18 @@ public class PlaceDatabase extends SQLiteOpenHelper {
         if (oldVersion < 4) {
             upgradeToVersion4(db);
         }
+
+        if (oldVersion < 5) {
+            upgradeToVersion5(db);
+        }
+
+        importShijingIfNeeded(db);
+    }
+
+    @Override
+    public void onOpen(SQLiteDatabase db) {
+        super.onOpen(db);
+        importShijingIfNeeded(db);
     }
 
     /**
@@ -169,6 +194,18 @@ public class PlaceDatabase extends SQLiteOpenHelper {
     }
 
     /**
+     * 升级到版本5：诗词表新增source列
+     */
+    private void upgradeToVersion5(SQLiteDatabase db) {
+        try {
+            addColumnIfNotExists(db, POETRY_TABLE, "source", "TEXT DEFAULT ''");
+            Log.d("PlaceDatabase", "升级到版本5完成");
+        } catch (Exception e) {
+            Log.e("PlaceDatabase", "升级到版本5失败", e);
+        }
+    }
+
+    /**
      * 检查表是否存在
      */
     private boolean isTableExists(SQLiteDatabase db, String tableName) {
@@ -219,6 +256,7 @@ public class PlaceDatabase extends SQLiteOpenHelper {
         values.put("theme", "其他");
         values.put("translation", "辽阔的江南，到处莺歌燕舞，绿树红花相映，水边村寨山麓城郭处处酒旗飘动。南朝遗留下的许多座古寺，如今有多少笼罩在这蒙胧烟雨之中。");
         values.put("poet_info", "杜牧(公元803-约852年),字牧之,号樊川居士,汉族,京兆万年(今陕西西安)人,唐代诗人。");
+        values.put("source", SOURCE_DEFAULT);
         db.insert(POETRY_TABLE, null, values);
 
         // 添加第二首诗
@@ -230,6 +268,7 @@ public class PlaceDatabase extends SQLiteOpenHelper {
         values.put("theme", "山水");
         values.put("translation", "秋风劲急，天空高远，猿声凄厉。江渚清澈，沙洲洁白，鸟儿在空中盘旋。无边的落叶在萧萧飘落，滚滚长江水不停地奔流而来。");
         values.put("poet_info", "杜甫(712年-770年),字子美,自号少陵野老,世称杜工部、杜少陵等,汉族,河南巩县(今河南省巩义市)人,唐代伟大的现实主义诗人。");
+        values.put("source", SOURCE_DEFAULT);
         db.insert(POETRY_TABLE, null, values);
 
         // 添加第三首诗
@@ -241,6 +280,7 @@ public class PlaceDatabase extends SQLiteOpenHelper {
         values.put("theme", "山水");
         values.put("translation", "泰山是一座怎样的山？它横跨齐鲁之地，青色连绵不绝。它钟灵毓秀，天地造化，山势雄伟，日夜分明。");
         values.put("poet_info", "杜甫(712年-770年),字子美,自号少陵野老,世称杜工部、杜少陵等,汉族,河南巩县(今河南省巩义市)人,唐代伟大的现实主义诗人。");
+        values.put("source", SOURCE_DEFAULT);
         db.insert(POETRY_TABLE, null, values);
 
         // 添加第四首诗
@@ -252,6 +292,7 @@ public class PlaceDatabase extends SQLiteOpenHelper {
         values.put("theme", "忧国");
         values.put("translation", "国家虽然破败，山河依旧存在，城中春意浓郁，草木茂盛深邃。感伤时事，花开时也洒下泪水，怨恨分离，鸟鸣声也令人心惊。");
         values.put("poet_info", "杜甫(712年-770年),字子美,自号少陵野老,世称杜工部、杜少陵等,汉族,河南巩县(今河南省巩义市)人,唐代伟大的现实主义诗人。");
+        values.put("source", SOURCE_DEFAULT);
         db.insert(POETRY_TABLE, null, values);
 
         // 添加第五首诗
@@ -263,6 +304,7 @@ public class PlaceDatabase extends SQLiteOpenHelper {
         values.put("theme", "友情");
         values.put("translation", "我李白正要乘船离开，忽然听见岸上有人踏歌而来。桃花潭水虽然深达千尺，也比不上汪伦送别我的深情厚谊。");
         values.put("poet_info", "李白(701年-762年),字太白,号青莲居士,唐代伟大的浪漫主义诗人,被后人誉为诗仙。");
+        values.put("source", SOURCE_DEFAULT);
         db.insert(POETRY_TABLE, null, values);
 
         // 添加第六首诗
@@ -274,6 +316,7 @@ public class PlaceDatabase extends SQLiteOpenHelper {
         values.put("theme", "山水");
         values.put("translation", "清晨告别云雾缭绕的白帝城，千里之遥的江陵一天就能到达。两岸的猿声不住地啼叫，小船已经驶过了万重青山。");
         values.put("poet_info", "李白(701年-762年),字太白,号青莲居士,唐代伟大的浪漫主义诗人,被后人誉为诗仙。");
+        values.put("source", SOURCE_DEFAULT);
         db.insert(POETRY_TABLE, null, values);
 
         // 添加第七首诗
@@ -285,6 +328,7 @@ public class PlaceDatabase extends SQLiteOpenHelper {
         values.put("theme", "山水");
         values.put("translation", "天门山中间断开，楚江从中间流过。碧绿的江水自东流来到这里转弯。两岸青山相对挺立，一叶孤帆从夕阳下驶来。");
         values.put("poet_info", "李白(701年-762年),字太白,号青莲居士,唐代伟大的浪漫主义诗人,被后人誉为诗仙。");
+        values.put("source", SOURCE_DEFAULT);
         db.insert(POETRY_TABLE, null, values);
 
         // 添加第八首诗
@@ -296,6 +340,7 @@ public class PlaceDatabase extends SQLiteOpenHelper {
         values.put("theme", "离别");
         values.put("translation", "青山横亘在北郊，白水环绕着东城。在这里一别之后，你将像孤蓬一样飘泊万里。");
         values.put("poet_info", "李白(701年-762年),字太白,号青莲居士,唐代伟大的浪漫主义诗人,被后人誉为诗仙。");
+        values.put("source", SOURCE_DEFAULT);
         db.insert(POETRY_TABLE, null, values);
 
         // 添加第九首诗
@@ -307,6 +352,7 @@ public class PlaceDatabase extends SQLiteOpenHelper {
         values.put("theme", "离别");
         values.put("translation", "老朋友在黄鹤楼与我告别西行，在烟雨迷蒙的暮春三月去扬州。孤帆远去在碧空尽头消失，只见长江水向天际奔流。");
         values.put("poet_info", "李白(701年-762年),字太白,号青莲居士,唐代伟大的浪漫主义诗人,被后人誉为诗仙。");
+        values.put("source", SOURCE_DEFAULT);
         db.insert(POETRY_TABLE, null, values);
 
         // 添加第十首诗
@@ -318,16 +364,117 @@ public class PlaceDatabase extends SQLiteOpenHelper {
         values.put("theme", "思乡");
         values.put("translation", "床前明亮的月光，好像地上的霜。抬头看看这明亮的月亮，低下头来想起故乡。");
         values.put("poet_info", "李白(701年-762年),字太白,号青莲居士,唐代伟大的浪漫主义诗人,被后人誉为诗仙。");
+        values.put("source", SOURCE_DEFAULT);
         db.insert(POETRY_TABLE, null, values);
+    }
+
+    /**
+     * 幂等导入《诗经》数据：
+     * 1) 若已存在source=shijing的数据则跳过
+     * 2) 否则从assets/shijing.json导入
+     */
+    private void importShijingIfNeeded(SQLiteDatabase db) {
+        Cursor cursor = null;
+        try {
+            cursor = db.rawQuery("SELECT COUNT(*) FROM " + POETRY_TABLE + " WHERE source = ?", new String[]{SOURCE_SHIJING});
+            if (cursor.moveToFirst() && cursor.getInt(0) > 0) {
+                return;
+            }
+        } catch (Exception e) {
+            Log.e("PlaceDatabase", "检查诗经导入状态失败", e);
+            return;
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+
+        importShijingFromAssets(db);
+    }
+
+    private void importShijingFromAssets(SQLiteDatabase db) {
+        InputStream inputStream = null;
+        ByteArrayOutputStream outputStream = null;
+        try {
+            if (appContext == null) {
+                Log.e("PlaceDatabase", "Context为空，无法导入诗经");
+                return;
+            }
+
+            inputStream = appContext.getAssets().open(SHIJING_ASSET_FILE);
+            outputStream = new ByteArrayOutputStream();
+            byte[] buffer = new byte[4096];
+            int len;
+            while ((len = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, len);
+            }
+            String json = outputStream.toString("UTF-8");
+
+            JSONArray array = new JSONArray(json);
+            db.beginTransaction();
+            for (int i = 0; i < array.length(); i++) {
+                JSONObject item = array.optJSONObject(i);
+                if (item == null) {
+                    continue;
+                }
+
+                String title = item.optString("title", "").trim();
+                if (title.isEmpty()) {
+                    continue;
+                }
+                String chapter = item.optString("chapter", "").trim();
+                String section = item.optString("section", "").trim();
+                JSONArray contentArray = item.optJSONArray("content");
+                StringBuilder contentBuilder = new StringBuilder();
+                if (contentArray != null) {
+                    for (int j = 0; j < contentArray.length(); j++) {
+                        if (j > 0) {
+                            contentBuilder.append('\n');
+                        }
+                        contentBuilder.append(contentArray.optString(j, ""));
+                    }
+                }
+
+                ContentValues values = new ContentValues();
+                values.put("name", title);
+                values.put("title", "《" + title + "》·《诗经》");
+                values.put("content", contentBuilder.toString());
+                values.put("pic", "p1");
+                values.put("theme", chapter + (section.isEmpty() ? "" : ("-" + section)));
+                values.put("translation", "");
+                values.put("poet_info", "《诗经》");
+                values.put("source", SOURCE_SHIJING);
+                db.insert(POETRY_TABLE, null, values);
+            }
+            db.setTransactionSuccessful();
+            Log.d("PlaceDatabase", "诗经导入完成");
+        } catch (Exception e) {
+            Log.e("PlaceDatabase", "导入诗经失败", e);
+        } finally {
+            if (db.inTransaction()) {
+                db.endTransaction();
+            }
+            try {
+                if (inputStream != null) {
+                    inputStream.close();
+                }
+                if (outputStream != null) {
+                    outputStream.close();
+                }
+            } catch (Exception ignored) {
+            }
+        }
     }
 
     // 搜索诗词
     public List<PlaceBean> find(String key) {
         List<PlaceBean> list = new ArrayList<>();
         SQLiteDatabase database = this.getReadableDatabase();
-
-        String selection = key.isEmpty() ? null : "name LIKE ? OR title LIKE ? OR content LIKE ?";
-        String[] selectionArgs = key.isEmpty() ? null : new String[]{"%" + key + "%", "%" + key + "%", "%" + key + "%"};
+        String safeKey = key == null ? "" : key.trim();
+        String selection = safeKey.isEmpty() ? null : "name LIKE ? OR title LIKE ? OR content LIKE ? OR theme LIKE ? OR poet_info LIKE ?";
+        String[] selectionArgs = safeKey.isEmpty()
+                ? null
+                : new String[]{"%" + safeKey + "%", "%" + safeKey + "%", "%" + safeKey + "%", "%" + safeKey + "%", "%" + safeKey + "%"};
 
         try {
             Cursor cursor = database.query(POETRY_TABLE, null, selection, selectionArgs, null, null, null);

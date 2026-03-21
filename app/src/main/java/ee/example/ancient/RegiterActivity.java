@@ -71,7 +71,7 @@ public class RegiterActivity extends AppCompatActivity {
     }
 
     private void register(String username, String password) {
-        PlaceDatabase database = new PlaceDatabase(this, PlaceDatabase.USERS_TABLE, null, 1);
+        PlaceDatabase database = new PlaceDatabase(this, PlaceDatabase.DATABASE_NAME, null, 1);
         long result = database.registerUser(username, password);
         
         if (result != -1) {

@@ -29,7 +29,7 @@ public class MyCollectionActivity extends AppCompatActivity {
             return;
         }
 
-        database = new PlaceDatabase(this, PlaceDatabase.COLLECTIONS_TABLE, null, 1);
+        database = new PlaceDatabase(this, PlaceDatabase.DATABASE_NAME, null, 1);
         
         // 返回按钮
         findViewById(R.id.iv_back).setOnClickListener(v -> finish());

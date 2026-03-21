@@ -18,7 +18,7 @@ public class AddNoteActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_note);
 
-        database = new PlaceDatabase(this, "poetry.db", null, 1);
+        database = new PlaceDatabase(this, PlaceDatabase.DATABASE_NAME, null, 1);
         
         etTitle = findViewById(R.id.etTitle);
         etContent = findViewById(R.id.etContent);

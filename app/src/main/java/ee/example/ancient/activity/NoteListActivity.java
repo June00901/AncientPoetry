@@ -28,7 +28,7 @@ public class NoteListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_note_list);
 
-        database = new PlaceDatabase(this, "poetry.db", null, 1);
+        database = new PlaceDatabase(this, PlaceDatabase.DATABASE_NAME, null, 1);
         
         // 返回按钮
         findViewById(R.id.iv_back).setOnClickListener(v -> finish());

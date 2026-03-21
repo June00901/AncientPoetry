@@ -72,7 +72,7 @@ public class MainChangemima extends AppCompatActivity {
     }
 
     private void changePassword(String oldPassword, String newPassword) {
-        PlaceDatabase database = new PlaceDatabase(this, PlaceDatabase.USERS_TABLE, null, 1);
+        PlaceDatabase database = new PlaceDatabase(this, PlaceDatabase.DATABASE_NAME, null, 1);
         boolean success = database.changePassword(Data.userId.intValue(), oldPassword, newPassword);
         
         if (success) {
