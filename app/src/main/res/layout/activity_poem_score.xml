@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5"
+    android:background="@drawable/bg_paper"
     android:fillViewport="true">
 
     <LinearLayout
@@ -11,13 +12,15 @@
         android:orientation="vertical"
         android:padding="16dp">
 
+        <!-- 标题区域 -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="AI诗词评析"
-            android:textSize="24sp"
+            android:textSize="26sp"
             android:textStyle="bold"
-            android:textColor="#333333"
+            android:fontFamily="serif"
+            android:textColor="#2C3E50"
             android:gravity="center"
             android:layout_marginBottom="8dp"/>
 
@@ -25,8 +28,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="专业多维度评分 · 稳定性算法保障"
-            android:textSize="12sp"
-            android:textColor="#888888"
+            android:textSize="13sp"
+            android:fontFamily="sans-serif-light"
+            android:textColor="#7F8C8D"
             android:gravity="center"
             android:layout_marginBottom="20dp"/>
 
@@ -36,7 +40,8 @@
             android:layout_height="wrap_content"
             android:text="诗词体裁"
             android:textSize="14sp"
-            android:textColor="#666666"
+            android:fontFamily="serif"
+            android:textColor="#34495E"
             android:layout_marginBottom="6dp"/>
 
         <Spinner
@@ -52,7 +57,8 @@
             android:layout_height="wrap_content"
             android:text="创作背景（选填，有助于更准确评析）"
             android:textSize="14sp"
-            android:textColor="#666666"
+            android:fontFamily="serif"
+            android:textColor="#34495E"
             android:layout_marginBottom="6dp"/>
 
         <EditText
@@ -64,6 +70,8 @@
             android:background="@drawable/edit_text_background"
             android:hint="例如：此诗写于春日游园，感怀时光流逝..."
             android:textSize="14sp"
+            android:fontFamily="sans-serif"
+            android:textColorHint="#BDC3C7"
             android:gravity="top"
             android:lineSpacingMultiplier="1.4"
             android:layout_marginBottom="16dp"/>
@@ -74,7 +82,8 @@
             android:layout_height="wrap_content"
             android:text="您的原创诗词 *"
             android:textSize="14sp"
-            android:textColor="#666666"
+            android:fontFamily="serif"
+            android:textColor="#34495E"
             android:layout_marginBottom="6dp"/>
 
         <EditText
@@ -86,6 +95,8 @@
             android:background="@drawable/edit_text_background"
             android:hint="请在此输入您的原创诗词...\n例如：\n春风拂柳绿，\n细雨润花红。\n独坐亭台晚，\n诗心入梦中。"
             android:textSize="16sp"
+            android:fontFamily="serif"
+            android:textColorHint="#BDC3C7"
             android:gravity="top"
             android:lineSpacingMultiplier="1.8"
             android:typeface="serif"
@@ -98,6 +109,8 @@
             android:layout_height="wrap_content"
             android:text="开始评析"
             android:textSize="16sp"
+            android:fontFamily="serif"
+            android:textStyle="bold"
             android:padding="14dp"
             android:background="@drawable/button_background"
             android:textColor="#FFFFFF"
@@ -118,7 +131,8 @@
             android:layout_height="wrap_content"
             android:text="AI正在深度评析中..."
             android:textSize="14sp"
-            android:textColor="#666666"
+            android:fontFamily="serif"
+            android:textColor="#7F8C8D"
             android:gravity="center"
             android:visibility="gone"
             android:layout_marginBottom="16dp"/>
@@ -147,6 +161,7 @@
                     android:layout_height="wrap_content"
                     android:text="综合评分"
                     android:textSize="16sp"
+                    android:fontFamily="serif"
                     android:textColor="#333333"
                     android:textStyle="bold"/>
 
@@ -163,7 +178,7 @@
                     android:layout_height="wrap_content"
                     android:text="85"
                     android:textSize="36sp"
-                    android:textColor="#FF6B6B"
+                    android:textColor="#C44545"
                     android:textStyle="bold"/>
 
                 <TextView
@@ -171,11 +186,11 @@
                     android:layout_height="wrap_content"
                     android:text="分"
                     android:textSize="16sp"
-                    android:textColor="#FF6B6B"
+                    android:textColor="#C44545"
                     android:layout_marginStart="4dp"/>
             </LinearLayout>
 
-            <!-- 详细分数行（由代码动态更新） -->
+            <!-- 详细分数行 -->
             <TextView
                 android:id="@+id/text_score_detail"
                 android:layout_width="match_parent"
@@ -193,7 +208,7 @@
                 android:text="待改进"
                 android:textSize="14sp"
                 android:textColor="#FFFFFF"
-                android:background="#FF6B6B"
+                android:background="#C44545"
                 android:paddingHorizontal="12dp"
                 android:paddingVertical="4dp"
                 android:layout_gravity="center"
@@ -205,6 +220,7 @@
                 android:layout_height="wrap_content"
                 android:text="分项评析"
                 android:textSize="14sp"
+                android:fontFamily="serif"
                 android:textColor="#333333"
                 android:textStyle="bold"
                 android:layout_marginBottom="12dp"/>
@@ -391,6 +407,7 @@
                 android:layout_height="wrap_content"
                 android:text="专家评语"
                 android:textSize="14sp"
+                android:fontFamily="serif"
                 android:textColor="#333333"
                 android:textStyle="bold"
                 android:layout_marginBottom="8dp"/>
@@ -411,6 +428,7 @@
                 android:layout_height="wrap_content"
                 android:text="精进建议"
                 android:textSize="14sp"
+                android:fontFamily="serif"
                 android:textColor="#333333"
                 android:textStyle="bold"
                 android:layout_marginBottom="8dp"/>
