@@ -15,6 +15,8 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -135,6 +137,13 @@ public class LoginActivity extends Activity {
                 startActivity(intent);
             }
         });
+
+        // ========== 在这里添加入场动画 ==========
+        View card = findViewById(R.id.card_container);
+        if (card != null) {
+            card.startAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_up));
+        }
+        // ====================================
     }
 
     private void intiview(){

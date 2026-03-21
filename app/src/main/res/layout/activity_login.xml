@@ -53,7 +53,7 @@
                 android:id="@+id/password"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_edittext_modern"
+                android:background="@drawable/bg_edittext_focused"
                 android:hint="请输入密码"
                 android:inputType="textPassword"
                 android:padding="14dp"
@@ -68,7 +68,9 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginBottom="24dp">
+                android:layout_marginBottom="24dp"
+                android:animateLayoutChanges="true"
+                android:id="@+id/card_container">
 
                 <CheckBox
                     android:id="@+id/remember"
