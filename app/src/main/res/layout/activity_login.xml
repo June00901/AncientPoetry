@@ -1,88 +1,129 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/backbg0"
-    android:orientation="vertical">
+    android:padding="24dp">
 
-    <TextView
+    <!-- 半透明卡片容器 -->
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="80dp"
-        android:layout_marginBottom="40dp"
-        android:gravity="center"
-        android:text="诗韵集萃"
-        android:textColor="#000000"
-        android:textSize="32sp"
-        android:textStyle="bold"
-        android:typeface="sans" />
+        android:layout_gravity="center"
+        android:fillViewport="true">
 
-    <EditText
-        android:id="@+id/username"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="50dp"
-        android:layout_marginEnd="50dp"
-        android:background="@color/editcolor"
-        android:gravity="center"
-        android:hint="请输入账号"
-        android:inputType="text"
-        android:padding="10dp" />
-
-    <EditText
-        android:id="@+id/password"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="50dp"
-        android:layout_marginEnd="50dp"
-        android:layout_marginTop="20dp"
-        android:background="@color/editcolor"
-        android:gravity="center"
-        android:hint="请输入密码"
-        android:inputType="textPassword"
-        android:padding="10dp" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:gravity="center"
-        android:orientation="horizontal">
-
-        <CheckBox
-            android:id="@+id/remember"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="记住密码" />
+            android:orientation="vertical"
+            android:background="@drawable/bg_login_card"
+            android:padding="24dp"
+            android:paddingTop="36dp"
+            android:paddingBottom="36dp"
+            android:elevation="8dp">
 
-        <CheckBox
-            android:id="@+id/autologin"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="20dp"
-            android:text="自动登录" />
-    </LinearLayout>
+            <!-- 应用名称（不使用Logo图片，避免缺少资源） -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="诗韵集萃"
+                android:textSize="32sp"
+                android:textStyle="bold"
+                android:fontFamily="serif"
+                android:textColor="#2C3E50"
+                android:gravity="center"
+                android:layout_marginBottom="32dp" />
 
-    <Button
-        android:id="@+id/login"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="50dp"
-        android:layout_marginEnd="50dp"
-        android:layout_marginTop="30dp"
-        android:background="@drawable/button_bg"
-        android:text="登录"
-        android:textColor="#FFFFFF" />
+            <!-- 账号输入框 -->
+            <EditText
+                android:id="@+id/username"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_edittext_modern"
+                android:hint="请输入账号"
+                android:inputType="text"
+                android:padding="14dp"
+                android:textSize="16sp"
+                android:textColor="#2C3E50"
+                android:textColorHint="#BDC3C7"
+                android:layout_marginBottom="16dp" />
 
-    <Button
-        android:id="@+id/register"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="50dp"
-        android:layout_marginEnd="50dp"
-        android:layout_marginTop="20dp"
-        android:background="@drawable/button_bg"
-        android:text="注册"
-        android:textColor="#FFFFFF" />
+            <!-- 密码输入框 -->
+            <EditText
+                android:id="@+id/password"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_edittext_modern"
+                android:hint="请输入密码"
+                android:inputType="textPassword"
+                android:padding="14dp"
+                android:textSize="16sp"
+                android:textColor="#2C3E50"
+                android:textColorHint="#BDC3C7"
+                android:layout_marginBottom="20dp" />
 
-</LinearLayout> 
+            <!-- 复选框区域（使用系统默认样式） -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="24dp">
+
+                <CheckBox
+                    android:id="@+id/remember"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="记住密码"
+                    android:textSize="14sp"
+                    android:textColor="#34495E"
+                    android:buttonTint="#C44545" />
+
+                <CheckBox
+                    android:id="@+id/autologin"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="自动登录"
+                    android:textSize="14sp"
+                    android:textColor="#34495E"
+                    android:buttonTint="#C44545" />
+            </LinearLayout>
+
+            <!-- 登录按钮 -->
+            <Button
+                android:id="@+id/login"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:background="@drawable/button_modern_primary"
+                android:text="登录"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:layout_marginBottom="16dp" />
+
+            <!-- 注册按钮 -->
+            <Button
+                android:id="@+id/register"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:background="@drawable/button_modern_primary"
+                android:text="注册"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF" />
+
+            <!-- 底部装饰文字 -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="—— 品诗词之美，传文化之韵 ——"
+                android:textSize="12sp"
+                android:textColor="#95A5A6"
+                android:gravity="center"
+                android:layout_marginTop="24dp" />
+
+        </LinearLayout>
+    </ScrollView>
+</FrameLayout>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 底层：你的背景图片（如果有） -->
+    <item>
+        <bitmap
+            android:src="@drawable/bg_paper"
+            android:gravity="center"
+            android:tileMode="disabled" />
+    </item>
+    <!-- 半透明渐变遮罩，让文字更清晰 -->
+    <item>
+        <shape>
+            <gradient
+                android:startColor="#20FFFFFF"
+                android:endColor="#40FFFFFF"
+                android:angle="135" />
+        </shape>
+    </item>
+</layer-list>
