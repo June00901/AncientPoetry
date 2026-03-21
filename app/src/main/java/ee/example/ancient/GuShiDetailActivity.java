@@ -61,7 +61,7 @@ public class GuShiDetailActivity extends AppCompatActivity {
         // 获取数据
         Intent intent = getIntent();
         String place = intent.getStringExtra("id");
-        PlaceDatabase database = new PlaceDatabase(this, PlaceDatabase.POETRY_TABLE, null, 1);
+        PlaceDatabase database = new PlaceDatabase(this, PlaceDatabase.DATABASE_NAME, null, 1);
         list = database.findById(place);
         
         // 初始化视图
@@ -94,7 +94,7 @@ public class GuShiDetailActivity extends AppCompatActivity {
             return;
         }
 
-        PlaceDatabase database = new PlaceDatabase(this, PlaceDatabase.COLLECTIONS_TABLE, null, 1);
+        PlaceDatabase database = new PlaceDatabase(this, PlaceDatabase.DATABASE_NAME, null, 1);
         PlaceBean poetry = list.get(0);
         
         if (database.isCollected(Data.userId.intValue(), poetry.getId())) {
@@ -129,7 +129,7 @@ public class GuShiDetailActivity extends AppCompatActivity {
         }
         
         btnCollect.setVisibility(View.VISIBLE);
-        PlaceDatabase database = new PlaceDatabase(this, "poetry.db", null, 1);
+        PlaceDatabase database = new PlaceDatabase(this, PlaceDatabase.DATABASE_NAME, null, 1);
         PlaceBean poetry = list.get(0);
         
         if (database.isCollected(Data.userId.intValue(), poetry.getId())) {

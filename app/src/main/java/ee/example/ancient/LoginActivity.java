@@ -82,7 +82,7 @@ public class LoginActivity extends Activity {
         }
 
         // 添加默认用户
-        PlaceDatabase database = new PlaceDatabase(this, PlaceDatabase.USERS_TABLE, null, 1);
+        PlaceDatabase database = new PlaceDatabase(this, PlaceDatabase.DATABASE_NAME, null, 1);
         SQLiteDatabase db = database.getWritableDatabase();
 
         // 检查用户是否已存在
@@ -205,7 +205,7 @@ public class LoginActivity extends Activity {
     }
 
     private void login(String username, String password) {
-        PlaceDatabase database = new PlaceDatabase(this, PlaceDatabase.USERS_TABLE, null, 1);
+        PlaceDatabase database = new PlaceDatabase(this, PlaceDatabase.DATABASE_NAME, null, 1);
         int userId = database.loginUser(username, password);
 
         if (userId != -1) {
