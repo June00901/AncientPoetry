@@ -3,35 +3,117 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:background="@drawable/backbg0">
 
-    <EditText
-        android:id="@+id/etTitle"
+    <!-- 顶部装饰条 -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="4dp"
+        android:background="@drawable/ai_header_gradient"/>
+
+    <!-- 标题区域 -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="请输入标题"
-        android:textSize="18sp"
-        android:padding="12dp"
-        android:background="@drawable/shape_edit_bg"
-        android:layout_marginBottom="16dp"/>
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="16dp"
+        android:layout_marginBottom="20dp">
 
-    <EditText
-        android:id="@+id/etContent"
+        <ImageView
+            android:id="@+id/iv_back"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:src="@drawable/back"
+            android:tint="#4A90E2"
+            android:layout_marginEnd="12dp"/>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="新建笔记"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="#357ABD"
+            android:fontFamily="@font/kaiti"/>
+    </LinearLayout>
+
+    <!-- 主内容卡片 -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:hint="请输入笔记内容"
-        android:gravity="top"
-        android:padding="12dp"
-        android:background="@drawable/shape_edit_bg"
-        android:layout_marginBottom="16dp"/>
+        android:orientation="vertical"
+        android:background="@drawable/ai_input_card"
+        android:layout_marginHorizontal="20dp"
+        android:padding="24dp"
+        android:elevation="4dp">
 
+        <!-- 标题输入框 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="笔记标题"
+            android:textSize="16sp"
+            android:textColor="#357ABD"
+            android:textStyle="bold"
+            android:fontFamily="@font/kaiti"
+            android:layout_marginBottom="8dp"/>
+
+        <EditText
+            android:id="@+id/etTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="请输入笔记标题"
+            android:textSize="16sp"
+            android:textColor="#333333"
+            android:textColorHint="#999999"
+            android:padding="16dp"
+            android:background="@drawable/ai_edit_background"
+            android:layout_marginBottom="20dp"
+            android:fontFamily="@font/kaiti"/>
+
+        <!-- 内容输入框 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="笔记内容"
+            android:textSize="16sp"
+            android:textColor="#357ABD"
+            android:textStyle="bold"
+            android:fontFamily="@font/kaiti"
+            android:layout_marginBottom="8dp"/>
+
+        <EditText
+            android:id="@+id/etContent"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:hint="请输入笔记内容"
+            android:gravity="top"
+            android:textSize="15sp"
+            android:textColor="#333333"
+            android:textColorHint="#999999"
+            android:padding="16dp"
+            android:background="@drawable/ai_edit_background"
+            android:fontFamily="@font/kaiti"/>
+    </LinearLayout>
+
+    <!-- 保存按钮 -->
     <Button
         android:id="@+id/btnSave"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="保存"
+        android:layout_height="56dp"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="20dp"
+        android:text="保存笔记"
+        android:textSize="18sp"
+        android:textStyle="bold"
         android:textColor="#FFFFFF"
-        android:background="@drawable/button_bg"/>
+        android:background="@drawable/ai_button_background"
+        android:elevation="6dp"
+        android:fontFamily="@font/kaiti"/>
 
-</LinearLayout> 
+</LinearLayout>

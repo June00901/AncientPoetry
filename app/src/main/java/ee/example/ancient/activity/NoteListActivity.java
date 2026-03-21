@@ -205,6 +205,13 @@ public class NoteListActivity extends AppCompatActivity {
         poemApiClient.callApiWithPrompt(prompt, new PoemApiClient.PoemCallback() {
             @Override
             public void onSuccess(String result) {
+                // 保存今日学习计划到SharedPreferences
+                SharedPreferences sharedPreferences = getSharedPreferences("today_plan", MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putString("plan_content", result);
+                editor.putLong("plan_time", System.currentTimeMillis());
+                editor.apply();
+                
                 mainHandler.post(() -> showTodayPlanPopup(result));
             }
 

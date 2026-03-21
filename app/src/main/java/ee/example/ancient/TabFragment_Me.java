@@ -63,6 +63,9 @@ public class TabFragment_Me extends Fragment {
     private LinearLayout llLogout;
     private ImageView ivAvatar;
     private TextView tvNickname;
+    private androidx.cardview.widget.CardView cardTodayPlan;
+    private TextView tvPlanDate;
+    private TextView tvTodayPlanContent;
 
     private static final int CAMERA_REQUEST = 1888;
     private static final int GALLERY_REQUEST = 1889;
@@ -92,6 +95,9 @@ public class TabFragment_Me extends Fragment {
         llLogout = mView.findViewById(R.id.ll_logout);
         ivAvatar = mView.findViewById(R.id.iv_avatar);
         tvNickname = mView.findViewById(R.id.tv_nickname);
+        cardTodayPlan = mView.findViewById(R.id.card_today_plan);
+        tvPlanDate = mView.findViewById(R.id.tv_plan_date);
+        tvTodayPlanContent = mView.findViewById(R.id.tv_today_plan_content);
         loadSavedAvatar();
         loadSavedNickname();
 
@@ -132,6 +138,39 @@ public class TabFragment_Me extends Fragment {
         super.onResume();
         Log.d("TabFragment_Me", "onResume called");
         updateLoginStatus();
+        loadTodayPlan();
+    }
+
+    private void loadTodayPlan() {
+        if (getContext() == null) return;
+        
+        SharedPreferences sharedPreferences = getContext().getSharedPreferences("today_plan", Context.MODE_PRIVATE);
+        String planContent = sharedPreferences.getString("plan_content", "");
+        long planTime = sharedPreferences.getLong("plan_time", 0);
+        
+        if (!planContent.isEmpty() && planTime > 0) {
+            // 检查是否是今天的计划
+            long currentTime = System.currentTimeMillis();
+            long dayMillis = 24 * 60 * 60 * 1000;
+            long diff = currentTime - planTime;
+            
+            if (diff < dayMillis) {
+                // 显示今日计划
+                cardTodayPlan.setVisibility(View.VISIBLE);
+                tvTodayPlanContent.setText(planContent);
+                
+                // 显示日期
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
+                String dateStr = sdf.format(new java.util.Date(planTime));
+                tvPlanDate.setText(dateStr);
+            } else {
+                // 不是今天的计划，隐藏
+                cardTodayPlan.setVisibility(View.GONE);
+            }
+        } else {
+            // 没有计划，隐藏
+            cardTodayPlan.setVisibility(View.GONE);
+        }
     }
 
     private void setListeners() {

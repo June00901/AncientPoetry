@@ -1,6 +1,7 @@
 package ee.example.ancient.activity;
 
 import android.os.Bundle;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
@@ -23,6 +24,7 @@ public class AddNoteActivity extends AppCompatActivity {
         etTitle = findViewById(R.id.etTitle);
         etContent = findViewById(R.id.etContent);
         
+        findViewById(R.id.iv_back).setOnClickListener(v -> finish());
         findViewById(R.id.btnSave).setOnClickListener(v -> saveNote());
     }
 
