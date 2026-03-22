@@ -4,15 +4,19 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.SearchView;
+import android.widget.Toast;
 
 import java.util.List;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
 import android.widget.LinearLayout;
@@ -49,12 +53,49 @@ public class TabFragment_Find extends Fragment {
         showStagger();
 
         Button btnAiSearch = mView.findViewById(R.id.btn_ai_search);
+        Button btnSearch = mView.findViewById(R.id.btn_search);
+        EditText etDescSearch = mView.findViewById(R.id.et_desc_search);
 
         btnAiSearch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getActivity(), AiOnlineSearchActivity.class);
-                startActivity(intent);
+                String descQuery = etDescSearch.getText().toString().trim();
+                if (!TextUtils.isEmpty(descQuery)) {
+                    // 先在本地搜索
+                    String searchKey = descQuery;
+                    List<PlaceBean> list = database.find(searchKey);
+                    if (list.isEmpty()) {
+                        // 本地无结果，提示跳转到联网搜索
+                        showNoResultDialog(descQuery);
+                    } else {
+                        // 本地有结果，显示结果
+                        adapter.setNewData(list);
+                    }
+                } else {
+                    // 无输入，直接跳转到联网搜索
+                    Intent intent = new Intent(getActivity(), AiOnlineSearchActivity.class);
+                    startActivity(intent);
+                }
+            }
+        });
+
+        // 搜索按钮点击事件
+        btnSearch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SearchView sv = mView.findViewById(R.id.sv);
+                String query = sv.getQuery().toString().trim();
+                if (!TextUtils.isEmpty(query)) {
+                    // 先在本地搜索
+                    List<PlaceBean> list = database.find(query);
+                    if (list.isEmpty()) {
+                        // 本地无结果，提示跳转到联网搜索
+                        showNoResultDialog(query);
+                    } else {
+                        // 本地有结果，显示结果
+                        adapter.setNewData(list);
+                    }
+                }
             }
         });
 
@@ -78,7 +119,19 @@ public class TabFragment_Find extends Fragment {
         sv.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                return false;
+                String searchQuery = query == null ? "" : query.trim();
+                if (!TextUtils.isEmpty(searchQuery)) {
+                    // 先在本地搜索
+                    List<PlaceBean> list = database.find(searchQuery);
+                    if (list.isEmpty()) {
+                        // 本地无结果，提示跳转到联网搜索
+                        showNoResultDialog(searchQuery);
+                    } else {
+                        // 本地有结果，显示结果
+                        adapter.setNewData(list);
+                    }
+                }
+                return true;
             }
 
             @Override
@@ -140,6 +193,20 @@ public class TabFragment_Find extends Fragment {
         String searchKey = keyword == null ? "" : keyword.trim();
         List<PlaceBean> list = database.find(searchKey);
         adapter.setNewData(list);
+    }
+
+    private void showNoResultDialog(String searchQuery) {
+        new AlertDialog.Builder(getContext())
+                .setTitle("搜索提示")
+                .setMessage("是否跳转到联网搜索界面？")
+                .setPositiveButton("是", (dialog, which) -> {
+                    // 跳转到联网搜索界面，并传递搜索内容
+                    Intent intent = new Intent(getActivity(), AiOnlineSearchActivity.class);
+                    intent.putExtra("desc_search_query", searchQuery);
+                    startActivity(intent);
+                })
+                .setNegativeButton("否", null)
+                .show();
     }
 
 }

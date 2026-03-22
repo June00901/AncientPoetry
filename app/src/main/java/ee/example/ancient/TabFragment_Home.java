@@ -45,6 +45,25 @@ public class TabFragment_Home extends Fragment {
     private RandomPoemClient randomPoemClient;
     private TextView tvRandomPoem;
     private TextView tvRandomPoemSource;
+    
+    // 本地名句列表
+    private static final String[][] LOCAL_POEMS = {
+        {"春眠不觉晓，处处闻啼鸟。", "孟浩然", "春晓"},
+        {"床前明月光，疑是地上霜。", "李白", "静夜思"},
+        {"锄禾日当午，汗滴禾下土。", "李绅", "悯农"},
+        {"欲穷千里目，更上一层楼。", "王之涣", "登鹳雀楼"},
+        {"飞流直下三千尺，疑是银河落九天。", "李白", "望庐山瀑布"},
+        {"桃花潭水深千尺，不及汪伦送我情。", "李白", "赠汪伦"},
+        {"莫愁前路无知己，天下谁人不识君。", "高适", "别董大"},
+        {"两个黄鹂鸣翠柳，一行白鹭上青天。", "杜甫", "绝句"},
+        {"随风潜入夜，润物细无声。", "杜甫", "春夜喜雨"},
+        {"等闲识得东风面，万紫千红总是春。", "朱熹", "春日"},
+        {"问渠那得清如许？为有源头活水来。", "朱熹", "观书有感"},
+        {"纸上得来终觉浅，绝知此事要躬行。", "陆游", "冬夜读书示子聿"},
+        {"山重水复疑无路，柳暗花明又一村。", "陆游", "游山西村"},
+        {"人生自古谁无死？留取丹心照汗青。", "文天祥", "过零丁洋"},
+        {"落红不是无情物，化作春泥更护花。", "龚自珍", "己亥杂诗"}
+    };
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
@@ -205,8 +224,8 @@ public class TabFragment_Home extends Fragment {
                     getActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            tvRandomPoem.setText("点击刷新");
-                            tvRandomPoemSource.setText("加载失败，点击重试");
+                            // 从本地名句列表中随机选择一首
+                            loadLocalPoem();
                         }
                     });
                 }
@@ -220,5 +239,22 @@ public class TabFragment_Home extends Fragment {
         if (randomPoemClient != null) {
             randomPoemClient.shutdown();
         }
+    }
+
+    // 从本地名句列表中随机选择一首
+    private void loadLocalPoem() {
+        if (getActivity() == null) return;
+        
+        // 随机生成索引
+        int randomIndex = (int) (Math.random() * LOCAL_POEMS.length);
+        String[] poem = LOCAL_POEMS[randomIndex];
+        
+        String content = poem[0];
+        String author = poem[1];
+        String title = poem[2];
+        
+        // 显示本地名句
+        tvRandomPoem.setText(content);
+        tvRandomPoemSource.setText("—— " + title + " · " + author + " (本地名句)");
     }
 }

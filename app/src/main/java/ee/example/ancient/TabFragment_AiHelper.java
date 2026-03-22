@@ -134,7 +134,7 @@ public class TabFragment_AiHelper extends Fragment {
         poemApiClient.callApiWithPrompt(prompt, new PoemApiClient.PoemCallback() {
             @Override
             public void onSuccess(String poem) {
-                viewModel.setResultText(poem);
+                // 最终结果已通过onStream实时更新，这里可以做一些收尾工作
                 viewModel.setLoading(false);
             }
 
@@ -143,6 +143,12 @@ public class TabFragment_AiHelper extends Fragment {
                 viewModel.setResultText("寻觅失败，请稍后重试。\n\n错误信息：" + error);
                 viewModel.setLoading(false);
                 Toast.makeText(getActivity(), "API调用失败", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onStream(String partialContent) {
+                // 实时更新结果
+                viewModel.setResultText(partialContent);
             }
         });
     }

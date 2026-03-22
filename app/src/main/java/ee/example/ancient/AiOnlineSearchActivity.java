@@ -1,5 +1,6 @@
 package ee.example.ancient;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -38,6 +39,15 @@ public class AiOnlineSearchActivity extends AppCompatActivity {
 
         poemApiClient = new PoemApiClient();
         mainHandler = new Handler(Looper.getMainLooper());
+
+        // 接收从本地搜索传递过来的描述型搜索内容
+        Intent intent = getIntent();
+        if (intent != null) {
+            String descSearchQuery = intent.getStringExtra("desc_search_query");
+            if (!TextUtils.isEmpty(descSearchQuery)) {
+                etDescSearch.setText(descSearchQuery);
+            }
+        }
 
         btnSearch.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -89,7 +99,7 @@ public class AiOnlineSearchActivity extends AppCompatActivity {
         poemApiClient.callApiWithPrompt(prompt, new PoemApiClient.PoemCallback() {
             @Override
             public void onSuccess(String result) {
-                tvResult.setText(result);
+                // 最终结果已通过onStream实时更新，这里可以做一些收尾工作
                 btnSearch.setEnabled(true);
                 mainHandler.postDelayed(() -> {
                     scrollView.fullScroll(ScrollView.FOCUS_UP);
@@ -101,6 +111,12 @@ public class AiOnlineSearchActivity extends AppCompatActivity {
                 tvResult.setText("搜索失败，请稍后重试。\n\n错误信息：" + error);
                 btnSearch.setEnabled(true);
                 Toast.makeText(AiOnlineSearchActivity.this, "API调用失败", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onStream(String partialContent) {
+                // 实时更新搜索结果
+                tvResult.setText(partialContent);
             }
         });
     }
@@ -136,7 +152,7 @@ public class AiOnlineSearchActivity extends AppCompatActivity {
         poemApiClient.callApiWithPrompt(prompt, new PoemApiClient.PoemCallback() {
             @Override
             public void onSuccess(String result) {
-                tvResult.setText(result);
+                // 最终结果已通过onStream实时更新，这里可以做一些收尾工作
                 btnSearch.setEnabled(true);
                 mainHandler.postDelayed(() -> {
                     scrollView.fullScroll(ScrollView.FOCUS_UP);
@@ -148,6 +164,12 @@ public class AiOnlineSearchActivity extends AppCompatActivity {
                 tvResult.setText("查找失败，请稍后重试。\n\n错误信息：" + error);
                 btnSearch.setEnabled(true);
                 Toast.makeText(AiOnlineSearchActivity.this, "API调用失败", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onStream(String partialContent) {
+                // 实时更新搜索结果
+                tvResult.setText(partialContent);
             }
         });
     }

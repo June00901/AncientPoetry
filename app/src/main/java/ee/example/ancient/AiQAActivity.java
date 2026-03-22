@@ -61,7 +61,7 @@ public class AiQAActivity extends AppCompatActivity {
         poemApiClient.callApiWithPrompt(prompt, new PoemApiClient.PoemCallback() {
             @Override
             public void onSuccess(String answer) {
-                tvAnswer.setText(answer);
+                // 最终结果已通过onStream实时更新，这里可以做一些收尾工作
                 btnAsk.setEnabled(true);
             }
 
@@ -70,6 +70,12 @@ public class AiQAActivity extends AppCompatActivity {
                 tvAnswer.setText("提问失败，请稍后重试。\n\n错误信息：" + error);
                 btnAsk.setEnabled(true);
                 Toast.makeText(AiQAActivity.this, "API调用失败", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onStream(String partialContent) {
+                // 实时更新回答
+                tvAnswer.setText(partialContent);
             }
         });
     }

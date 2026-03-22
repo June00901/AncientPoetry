@@ -154,6 +154,11 @@ public class PoemScoreActivity extends AppCompatActivity {
                     setDefaultResult();
                 });
             }
+
+            @Override
+            public void onStream(String partialContent) {
+                // 实时更新可以在这里实现，但由于是解析JSON结果，暂时不需要
+            }
         });
     }
 

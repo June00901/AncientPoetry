@@ -90,6 +90,11 @@ public class AiStudyPlanActivity extends AppCompatActivity {
                     Toast.makeText(AiStudyPlanActivity.this, "生成失败：" + error, Toast.LENGTH_LONG).show();
                 });
             }
+
+            @Override
+            public void onStream(String partialContent) {
+                // 实时更新可以在这里实现，但由于是跳转到结果页面，暂时不需要
+            }
         });
     }
 

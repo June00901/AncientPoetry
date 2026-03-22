@@ -60,14 +60,53 @@
             android:fontFamily="@font/kaiti"
             android:layout_marginBottom="16dp"/>
 
-        <SearchView
-            android:id="@+id/sv"
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <SearchView
+                android:id="@+id/sv"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:background="@drawable/ai_edit_background"
+                android:iconifiedByDefault="false"
+                android:queryBackground="@null"
+                android:queryHint="请输入搜索古诗词名、作者或诗句"
+                android:fontFamily="@font/kaiti"/>
+
+            <Button
+                android:id="@+id/btn_search"
+                android:layout_width="100dp"
+                android:layout_height="52dp"
+                android:text="搜索"
+                android:textSize="16sp"
+                android:background="@drawable/ai_button_secondary"
+                android:textColor="#FFFFFF"
+                android:fontFamily="@font/kaiti"
+                android:layout_marginStart="12dp"/>
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="描述型查找古诗"
+            android:textSize="16sp"
+            android:textColor="#357ABD"
+            android:fontFamily="@font/kaiti"
+            android:layout_marginBottom="8dp"/>
+
+        <EditText
+            android:id="@+id/et_desc_search"
             android:layout_width="match_parent"
             android:layout_height="52dp"
             android:background="@drawable/ai_edit_background"
-            android:iconifiedByDefault="false"
-            android:queryBackground="@null"
-            android:queryHint="请输入搜索古诗词名、作者或诗句"
+            android:hint="例如：描述有一间大房子庇护很多人的古诗"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:textColorHint="#9E9E9E"
             android:fontFamily="@font/kaiti"
             android:layout_marginBottom="16dp"/>
 

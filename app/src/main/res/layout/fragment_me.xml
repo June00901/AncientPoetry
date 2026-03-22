@@ -282,6 +282,7 @@
                 android:layout_marginBottom="12dp">
 
                 <TextView
+                    android:id="@+id/tv_plan_title"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -289,7 +290,9 @@
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="#1976D2"
-                    android:fontFamily="@font/kaiti"/>
+                    android:fontFamily="@font/kaiti"
+                    android:clickable="true"
+                    android:focusable="true"/>
 
                 <TextView
                     android:id="@+id/tv_plan_date"
@@ -297,7 +300,18 @@
                     android:layout_height="wrap_content"
                     android:textSize="12sp"
                     android:textColor="#757575"
-                    android:fontFamily="@font/kaiti"/>
+                    android:fontFamily="@font/kaiti"
+                    android:layout_marginEnd="12dp"/>
+
+                <Button
+                    android:id="@+id/btn_close_plan"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:text="✕"
+                    android:textSize="18sp"
+                    android:textColor="#757575"
+                    android:background="@android:color/transparent"
+                    android:padding="4dp"/>
             </LinearLayout>
 
             <View

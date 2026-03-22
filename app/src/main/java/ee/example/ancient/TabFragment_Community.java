@@ -126,7 +126,7 @@ public class TabFragment_Community extends Fragment {
                 @Override
                 public void onSuccess(String poem) {
                     lastGeneratedPoem = poem;
-                    textResult.setText(poem);
+                    // 最终结果已通过onStream实时更新，这里可以做一些收尾工作
                     btnGenerate.setEnabled(true);
                 }
 
@@ -134,6 +134,12 @@ public class TabFragment_Community extends Fragment {
                 public void onError(String error) {
                     textResult.setText("创作失败：" + error);
                     btnGenerate.setEnabled(true);
+                }
+
+                @Override
+                public void onStream(String partialContent) {
+                    // 实时更新创作结果
+                    textResult.setText(partialContent);
                 }
             });
         });

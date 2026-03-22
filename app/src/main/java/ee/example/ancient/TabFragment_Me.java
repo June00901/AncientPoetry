@@ -66,6 +66,8 @@ public class TabFragment_Me extends Fragment {
     private androidx.cardview.widget.CardView cardTodayPlan;
     private TextView tvPlanDate;
     private TextView tvTodayPlanContent;
+    private TextView tvPlanTitle;
+    private Button btnClosePlan;
 
     private static final int CAMERA_REQUEST = 1888;
     private static final int GALLERY_REQUEST = 1889;
@@ -98,6 +100,14 @@ public class TabFragment_Me extends Fragment {
         cardTodayPlan = mView.findViewById(R.id.card_today_plan);
         tvPlanDate = mView.findViewById(R.id.tv_plan_date);
         tvTodayPlanContent = mView.findViewById(R.id.tv_today_plan_content);
+        tvPlanTitle = mView.findViewById(R.id.tv_plan_title);
+        btnClosePlan = mView.findViewById(R.id.btn_close_plan);
+        
+        // 设置关闭按钮点击事件
+        btnClosePlan.setOnClickListener(v -> closeTodayPlan());
+        
+        // 设置标题点击事件（放大查看详情）
+        tvPlanTitle.setOnClickListener(v -> showPlanDetail());
         loadSavedAvatar();
         loadSavedNickname();
 
@@ -170,6 +180,27 @@ public class TabFragment_Me extends Fragment {
         } else {
             // 没有计划，隐藏
             cardTodayPlan.setVisibility(View.GONE);
+        }
+    }
+
+    private void closeTodayPlan() {
+        cardTodayPlan.setVisibility(View.GONE);
+    }
+
+    private void showPlanDetail() {
+        if (getContext() == null) return;
+        
+        SharedPreferences sharedPreferences = getContext().getSharedPreferences("today_plan", Context.MODE_PRIVATE);
+        String planContent = sharedPreferences.getString("plan_content", "");
+        long planTime = sharedPreferences.getLong("plan_time", 0);
+        
+        if (!planContent.isEmpty() && planTime > 0) {
+            // 显示详情对话框
+            new androidx.appcompat.app.AlertDialog.Builder(getContext())
+                .setTitle("今日学习计划详情")
+                .setMessage(planContent)
+                .setPositiveButton("确定", null)
+                .show();
         }
     }
 

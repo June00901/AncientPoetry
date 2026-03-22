@@ -31,6 +31,7 @@ public class PoemApiClient {
     public interface PoemCallback {
         void onSuccess(String poem);
         void onError(String error);
+        void onStream(String partialContent); // 实时流式更新
     }
 
     // ========== 原生成诗词方法 ==========
@@ -111,7 +112,10 @@ public class PoemApiClient {
                                             if (choices.length() > 0) {
                                                 JSONObject choice = choices.getJSONObject(0);
                                                 if (choice.has("delta") && choice.getJSONObject("delta").has("content")) {
-                                                    poemContent.append(choice.getJSONObject("delta").getString("content"));
+                                                    String partialContent = choice.getJSONObject("delta").getString("content");
+                                                    poemContent.append(partialContent);
+                                                    // 实时流式更新
+                                                    mainHandler.post(() -> callback.onStream(poemContent.toString()));
                                                 }
                                             }
                                         }
@@ -209,7 +213,10 @@ public class PoemApiClient {
                                             if (choices.length() > 0) {
                                                 JSONObject choice = choices.getJSONObject(0);
                                                 if (choice.has("delta") && choice.getJSONObject("delta").has("content")) {
-                                                    content.append(choice.getJSONObject("delta").getString("content"));
+                                                    String partialContent = choice.getJSONObject("delta").getString("content");
+                                                    content.append(partialContent);
+                                                    // 实时流式更新
+                                                    mainHandler.post(() -> callback.onStream(content.toString()));
                                                 }
                                             }
                                         }

@@ -221,6 +221,11 @@ public class NoteListActivity extends AppCompatActivity {
                     Toast.makeText(NoteListActivity.this, "生成失败：" + error, Toast.LENGTH_LONG).show();
                 });
             }
+
+            @Override
+            public void onStream(String partialContent) {
+                // 实时更新可以在这里实现，但由于是对话框显示，暂时不需要
+            }
         });
     }
 
