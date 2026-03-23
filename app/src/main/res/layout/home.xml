@@ -69,41 +69,67 @@
             android:focusable="true"
             android:foreground="?android:attr/selectableItemBackground">
 
-            <LinearLayout
+            <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
                 android:padding="16dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="今日诗词"
-                    android:textSize="14sp"
-                    android:textColor="#666666"/>
-
-                <TextView
-                    android:id="@+id/tv_random_poem"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="正在加载..."
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:textColor="#333333"
-                    android:lineSpacingExtra="4dp"
-                    android:layout_marginTop="4dp"/>
+                    android:orientation="vertical">
 
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="今日诗词"
+                        android:textSize="14sp"
+                        android:textColor="#666666"/>
+
+                    <TextView
+                        android:id="@+id/tv_random_poem"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="正在加载..."
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="#333333"
+                        android:lineSpacingExtra="4dp"
+                        android:layout_marginTop="4dp"/>
+
+                    <TextView
+                        android:id="@+id/tv_random_poem_source"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text=""
+                        android:textSize="14sp"
+                        android:textColor="#999999"
+                        android:layout_marginTop="4dp"
+                        android:layout_gravity="end"/>
+
+                </LinearLayout>
+
+                <!-- 详情标签 -->
                 <TextView
-                    android:id="@+id/tv_random_poem_source"
+                    android:id="@+id/btn_poem_detail"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text=""
-                    android:textSize="14sp"
-                    android:textColor="#999999"
+                    android:layout_alignParentTop="true"
+                    android:layout_alignParentRight="true"
                     android:layout_marginTop="4dp"
-                    android:layout_gravity="end"/>
+                    android:background="@drawable/small_tag_background"
+                    android:text="详情"
+                    android:textSize="10sp"
+                    android:textColor="#FFFFFF"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:paddingTop="2dp"
+                    android:paddingBottom="2dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?android:attr/selectableItemBackground"/>
 
-            </LinearLayout>
+            </RelativeLayout>
         </androidx.cardview.widget.CardView>
 
         <!-- AI辅助学习计划卡片 -->

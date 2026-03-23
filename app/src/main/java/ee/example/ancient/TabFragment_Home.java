@@ -46,6 +46,7 @@ public class TabFragment_Home extends Fragment {
     private TextView tvRandomPoem;
     private TextView tvRandomPoemSource;
     private TextView tvBannerPoem;
+    private String currentPoemId; // 保存当前显示的古诗ID
     
     // 本地名句列表
     private static final String[][] LOCAL_POEMS = {
@@ -161,6 +162,20 @@ public class TabFragment_Home extends Fragment {
             }
         });
 
+        // 详情标签点击事件
+        getActivity().findViewById(R.id.btn_poem_detail).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // 跳转到古诗详情页面，只在本地有对应古诗时才允许跳转
+                if (currentPoemId != null) {
+                    // 使用保存的古诗ID直接跳转
+                    Intent intent = new Intent(getActivity(), GuShiDetailActivity.class);
+                    intent.putExtra("id", currentPoemId);
+                    startActivity(intent);
+                }
+            }
+        });
+
         ImageButton imageButton = getActivity().findViewById(R.id.imb_queding);
         imageButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -258,6 +273,7 @@ public class TabFragment_Home extends Fragment {
     private void loadRandomPoem() {
         tvRandomPoem.setText("正在加载...");
         tvRandomPoemSource.setText("");
+        currentPoemId = null;
 
         randomPoemClient.getRandomPoem(new RandomPoemClient.RandomPoemCallback() {
             @Override
@@ -268,6 +284,12 @@ public class TabFragment_Home extends Fragment {
                         public void run() {
                             tvRandomPoem.setText(content);
                             tvRandomPoemSource.setText("—— " + title + " · " + author);
+                            // 从数据库中查找对应的古诗ID
+                            PlaceDatabase database = new PlaceDatabase(getContext(), PlaceDatabase.DATABASE_NAME, null, 1);
+                            List<PlaceBean> list = database.find(title);
+                            if (list != null && !list.isEmpty()) {
+                                currentPoemId = list.get(0).getId();
+                            }
                         }
                     });
                 }
@@ -311,5 +333,14 @@ public class TabFragment_Home extends Fragment {
         // 显示本地名句
         tvRandomPoem.setText(content);
         tvRandomPoemSource.setText("—— " + title + " · " + author + " (本地名句)");
+        
+        // 从数据库中查找对应的古诗ID
+        PlaceDatabase database = new PlaceDatabase(getContext(), PlaceDatabase.DATABASE_NAME, null, 1);
+        List<PlaceBean> list = database.find(title);
+        if (list != null && !list.isEmpty()) {
+            currentPoemId = list.get(0).getId();
+        } else {
+            currentPoemId = null;
+        }
     }
 }
