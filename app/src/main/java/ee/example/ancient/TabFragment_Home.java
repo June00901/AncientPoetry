@@ -45,6 +45,7 @@ public class TabFragment_Home extends Fragment {
     private RandomPoemClient randomPoemClient;
     private TextView tvRandomPoem;
     private TextView tvRandomPoemSource;
+    private TextView tvBannerPoem;
     
     // 本地名句列表
     private static final String[][] LOCAL_POEMS = {
@@ -65,6 +66,19 @@ public class TabFragment_Home extends Fragment {
         {"落红不是无情物，化作春泥更护花。", "龚自珍", "己亥杂诗"}
     };
 
+    // 轮播图对应的古诗列表
+    private static final String[][] BANNER_POEMS = {
+        {"江南春", "杜牧", "1"}, // 对应b1.jpg
+        {"望岳", "杜甫", "3"},   // 对应b10.jpg
+        {"赠汪伦", "李白", "5"}, // 对应b8.jpg
+        {"早发白帝城", "李白", "6"}, // 对应b9.jpg
+        {"春望", "杜甫", "4"},   // 对应b5.jpg
+        {"望天门山", "李白", "7"}, // 对应b6.jpg
+        {"送友人", "李白", "8"},   // 对应b3.jpg
+        {"黄鹤楼送孟浩然之广陵", "李白", "9"}, // 对应b4.jpg
+        {"静夜思", "李白", "10"}   // 对应b7.jpg
+    };
+
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
@@ -82,13 +96,54 @@ public class TabFragment_Home extends Fragment {
         // 设置轮播间隔时间
         banner.setDelayTime(2500);
 
+        // 初始化轮播图古诗名字
+        tvBannerPoem = getActivity().findViewById(R.id.tv_banner_poem);
+
         // 设置轮播图点击事件
         banner.setOnBannerListener(new OnBannerListener() {
             @Override
             public void OnBannerClick(int position) {
-                Toast.makeText(getActivity(), "点击了第" + (position + 1) + "张轮播图", Toast.LENGTH_SHORT).show();
+                // 跳转到对应的古诗详情页面
+                if (position < BANNER_POEMS.length) {
+                    String[] poem = BANNER_POEMS[position];
+                    String poemId = poem[2];
+                    
+                    Intent intent = new Intent(getActivity(), GuShiDetailActivity.class);
+                    intent.putExtra("id", poemId);
+                    startActivity(intent);
+                }
             }
         }).start();
+
+        // 监听轮播图页面变化，更新古诗名字
+        banner.setOnPageChangeListener(new androidx.viewpager.widget.ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+                // 更新轮播图上的古诗名字
+                if (position < BANNER_POEMS.length) {
+                    String[] poem = BANNER_POEMS[position];
+                    String poemTitle = poem[0];
+                    String poemAuthor = poem[1];
+                    tvBannerPoem.setText(poemTitle + " · " + poemAuthor);
+                }
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+            }
+        });
+
+        // 初始显示第一张轮播图的古诗名字
+        if (BANNER_POEMS.length > 0) {
+            String[] firstPoem = BANNER_POEMS[0];
+            String poemTitle = firstPoem[0];
+            String poemAuthor = firstPoem[1];
+            tvBannerPoem.setText(poemTitle + " · " + poemAuthor);
+        }
 
         // ===== 新增：初始化随机诗词卡片 =====
         tvRandomPoem = getActivity().findViewById(R.id.tv_random_poem);

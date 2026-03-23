@@ -14,6 +14,8 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import ee.example.ancient.Data;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 import org.json.JSONArray;
@@ -48,7 +50,13 @@ public class PoemScoreActivity extends AppCompatActivity {
     private static final String[][] TEST_CASES = {
             {"五言绝句", "春日", "春风拂柳绿，细雨润花红。独坐亭台晚，诗心入梦中。"},
             {"七言绝句", "秋思", "银烛秋光冷画屏，轻罗小扇扑流萤。天阶夜色凉如水，卧看牵牛织女星。"},
-            {"五言律诗", "山居", "空山新雨后，天气晚来秋。明月松间照，清泉石上流。"}
+            {"五言律诗", "山居", "空山新雨后，天气晚来秋。明月松间照，清泉石上流。竹喧归浣女，莲动下渔舟。随意春芳歇，王孙自可留。"},
+            {"七言律诗", "登高", "风急天高猿啸哀，渚清沙白鸟飞回。无边落木萧萧下，不尽长江滚滚来。万里悲秋常作客，百年多病独登台。艰难苦恨繁霜鬓，潦倒新停浊酒杯。"},
+            {"现代诗", "再别康桥", "轻轻的我走了，正如我轻轻的来；我轻轻的招手，作别西天的云彩。那河畔的金柳，是夕阳中的新娘；波光里的艳影，在我的心头荡漾。"},
+            {"古体诗", "将进酒", "君不见黄河之水天上来，奔流到海不复回。君不见高堂明镜悲白发，朝如青丝暮成雪。人生得意须尽欢，莫使金樽空对月。天生我材必有用，千金散尽还复来。"},
+            {"五言绝句", "原创·秋意", "秋风吹落叶，暮色满西楼。独立栏杆处，思君万里愁。"},
+            {"七言绝句", "原创·春日偶成", "桃花朵朵笑春风，杨柳依依舞碧空。最是一年春好处，吟诗饮酒乐无穷。"},
+            {"现代诗", "原创·城市夜晚", "霓虹闪烁的街头，人群如潮水般涌动。我站在十字路口，寻找属于自己的方向。"}
     };
 
     private Spinner spinnerType;
@@ -56,6 +64,7 @@ public class PoemScoreActivity extends AppCompatActivity {
     private EditText inputPoem;
     private Button btnScore;
     private Button btnLoadTest;
+    private Button btnSaveNote;
     private ProgressBar progressBar;
     private LinearLayout layoutResult;
     private TextView textTotalScore, textLevel, textScoreDetail, textComment, textSuggestion;
@@ -86,6 +95,7 @@ public class PoemScoreActivity extends AppCompatActivity {
         inputPoem = findViewById(R.id.input_original_poem);
         btnScore = findViewById(R.id.btn_start_score);
         btnLoadTest = findViewById(R.id.btn_load_test);
+        btnSaveNote = findViewById(R.id.btn_save_note);
         progressBar = findViewById(R.id.progress_bar);
         layoutResult = findViewById(R.id.layout_result);
         textTotalScore = findViewById(R.id.text_total_score);
@@ -119,6 +129,7 @@ public class PoemScoreActivity extends AppCompatActivity {
     private void setupListeners() {
         btnScore.setOnClickListener(v -> startScoring());
         btnLoadTest.setOnClickListener(v -> loadRandomTestCase());
+        btnSaveNote.setOnClickListener(v -> saveNote());
     }
 
     private void startScoring() {
@@ -157,7 +168,16 @@ public class PoemScoreActivity extends AppCompatActivity {
 
             @Override
             public void onStream(String partialContent) {
-                // 实时更新可以在这里实现，但由于是解析JSON结果，暂时不需要
+                // 实时更新评分过程，但只显示友好的提示信息
+                runOnUiThread(() -> {
+                    // 显示加载中的友好提示
+                    if (layoutResult.getVisibility() != View.VISIBLE) {
+                        layoutResult.setVisibility(View.VISIBLE);
+                    }
+                    // 显示分析进度提示，不显示原始代码内容
+                    textComment.setText("AI正在分析中...\n\n正在评估诗词的格律、意境、用词、情感和创新性...");
+                    textSuggestion.setText("请稍候，评分结果即将生成...");
+                });
             }
         });
     }
@@ -281,6 +301,8 @@ public class PoemScoreActivity extends AppCompatActivity {
             textSuggestion.setText(suggestion);
 
             layoutResult.setVisibility(View.VISIBLE);
+            // 显示保存笔记按钮
+            btnSaveNote.setVisibility(View.VISIBLE);
         } catch (Exception e) {
             e.printStackTrace();
             Toast.makeText(this, "解析结果失败，使用默认评分", Toast.LENGTH_SHORT).show();
@@ -312,6 +334,8 @@ public class PoemScoreActivity extends AppCompatActivity {
         textComment.setText("AI评析暂时无法获取，请重试。");
         textSuggestion.setText("检查网络或稍后重试。");
         layoutResult.setVisibility(View.VISIBLE);
+        // 显示保存笔记按钮
+        btnSaveNote.setVisibility(View.VISIBLE);
     }
 
     private int applyStabilityCheck(int rawScore, String poemType) {
@@ -370,5 +394,46 @@ public class PoemScoreActivity extends AppCompatActivity {
         inputBackground.setText("测试用例：" + testCase[1]);
         inputPoem.setText(testCase[2]);
         Toast.makeText(this, "已加载测试用例", Toast.LENGTH_SHORT).show();
+    }
+
+    private void saveNote() {
+        String type = spinnerType.getSelectedItem().toString();
+        String poem = inputPoem.getText().toString().trim();
+        String totalScore = textTotalScore.getText().toString();
+        String level = textLevel.getText().toString();
+        String scoreDetail = textScoreDetail.getText().toString();
+        String comment = textComment.getText().toString();
+        String suggestion = textSuggestion.getText().toString();
+
+        if (poem.isEmpty()) {
+            Toast.makeText(this, "没有可保存的内容", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // 构建笔记内容
+        StringBuilder noteContent = new StringBuilder();
+        noteContent.append("【诗词体裁】\n").append(type).append("\n\n");
+        noteContent.append("【原诗内容】\n").append(poem).append("\n\n");
+        noteContent.append("【评分结果】\n").append("总分：").append(totalScore).append(" - " ).append(level).append("\n\n");
+        noteContent.append("【分项得分】\n").append(scoreDetail).append("\n\n");
+        noteContent.append("【专家评语】\n").append(comment).append("\n\n");
+        noteContent.append("【精进建议】\n").append(suggestion);
+
+        // 保存到数据库
+        PlaceDatabase database = new PlaceDatabase(this, PlaceDatabase.DATABASE_NAME, null, 1);
+        long result = database.addNote(Data.userId != null ? Data.userId.intValue() : 1, 
+                "诗词评析 - " + type, 
+                noteContent.toString(), 
+                "", 
+                poem, 
+                "", 
+                "", 
+                type);
+
+        if (result > 0) {
+            Toast.makeText(this, "保存成功", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "保存失败，请重试", Toast.LENGTH_SHORT).show();
+        }
     }
 }

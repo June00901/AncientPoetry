@@ -41,6 +41,8 @@ public class GuShiDetailActivity extends AppCompatActivity {
         
         // 初始化按钮
         btnCollect = findViewById(R.id.btnCollect);
+        Button btnBack = findViewById(R.id.btn_back);
+        Button btnShare = findViewById(R.id.btn_share);
         
         // 根据登录状态控制收藏按钮的可见性
         if (!Data.sta_np || Data.sta_name == null) {
@@ -49,12 +51,29 @@ public class GuShiDetailActivity extends AppCompatActivity {
             btnCollect.setVisibility(View.VISIBLE);
         }
         
+        // 返回按钮点击事件
+        btnBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
+        
+        // 收藏按钮点击事件
         btnCollect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String title = ((TextView)findViewById(R.id.conText1)).getText().toString();
                 String content = ((TextView)findViewById(R.id.conText2)).getText().toString();
                 saveCollection(title, content);
+            }
+        });
+        
+        // 分享按钮点击事件
+        btnShare.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sharePoetry();
             }
         });
         
@@ -154,6 +173,27 @@ public class GuShiDetailActivity extends AppCompatActivity {
             Data.sta_np = false;
             Data.sta_name = null;
             Data.userId = null;
+        }
+    }
+
+    // 分享诗词功能
+    private void sharePoetry() {
+        if (list != null && !list.isEmpty()) {
+            PlaceBean data = list.get(0);
+            String title = data.getTitle();
+            String content = data.getContent();
+            String translation = data.getTranslation();
+            
+            StringBuilder shareText = new StringBuilder();
+            shareText.append(title).append("\n\n");
+            shareText.append(content).append("\n\n");
+            shareText.append("译文：\n").append(translation);
+            
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.setType("text/plain");
+            shareIntent.putExtra(Intent.EXTRA_SUBJECT, "分享古诗");
+            shareIntent.putExtra(Intent.EXTRA_TEXT, shareText.toString());
+            startActivity(Intent.createChooser(shareIntent, "分享到"));
         }
     }
 }

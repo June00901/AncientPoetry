@@ -24,7 +24,7 @@ public class AddNoteActivity extends AppCompatActivity {
         etTitle = findViewById(R.id.etTitle);
         etContent = findViewById(R.id.etContent);
         
-        findViewById(R.id.iv_back).setOnClickListener(v -> finish());
+        findViewById(R.id.iv_back).setOnClickListener(v -> onBackPressed());
         findViewById(R.id.btnSave).setOnClickListener(v -> saveNote());
     }
 
@@ -58,6 +58,26 @@ public class AddNoteActivity extends AppCompatActivity {
             finish();
         } else {
             Toast.makeText(this, "保存失败", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        String title = etTitle.getText().toString().trim();
+        String content = etContent.getText().toString().trim();
+        
+        if (!title.isEmpty() || !content.isEmpty()) {
+            // 有输入内容，显示保存提示
+            new androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle("保存笔记")
+                    .setMessage("笔记内容已输入，是否保存？")
+                    .setPositiveButton("保存", (dialog, which) -> saveNote())
+                    .setNegativeButton("不保存", (dialog, which) -> finish())
+                    .setNeutralButton("取消", null)
+                    .show();
+        } else {
+            // 无输入内容，直接返回
+            super.onBackPressed();
         }
     }
 } 

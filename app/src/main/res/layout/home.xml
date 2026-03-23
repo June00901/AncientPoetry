@@ -23,14 +23,37 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="16dp"
-            android:layout_marginTop="8dp">
+            android:layout_marginTop="8dp"
+            android:orientation="vertical">
 
-            <com.youth.banner.Banner
-                android:id="@+id/banner"
+            <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="180dp"
-                android:background="@drawable/banner_bg"
-                android:scaleType="centerCrop"/>
+                android:layout_height="180dp">
+
+                <com.youth.banner.Banner
+                    android:id="@+id/banner"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/banner_bg"
+                    android:scaleType="centerCrop"/>
+
+                <!-- 古诗名字覆盖层 -->
+                <TextView
+                    android:id="@+id/tv_banner_poem"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentRight="true"
+                    android:layout_margin="16dp"
+                    android:text="古诗名字"
+                    android:textSize="16sp"
+                    android:textColor="#FFFFFF"
+                    android:shadowColor="#000000"
+                    android:shadowDx="1"
+                    android:shadowDy="1"
+                    android:shadowRadius="2"
+                    android:background="@drawable/banner_text_background"/>
+            </RelativeLayout>
         </LinearLayout>
 
         <!-- ===== 新增：今日诗词卡片 ===== -->

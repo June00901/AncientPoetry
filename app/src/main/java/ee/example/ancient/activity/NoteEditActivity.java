@@ -13,6 +13,8 @@ public class NoteEditActivity extends AppCompatActivity {
     private EditText etContent;
     private PlaceDatabase database;
     private int noteId;
+    private String originalTitle;
+    private String originalContent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,6 +30,10 @@ public class NoteEditActivity extends AppCompatActivity {
         noteId = getIntent().getIntExtra("noteId", -1);
         String title = getIntent().getStringExtra("title");
         String content = getIntent().getStringExtra("content");
+        
+        // 保存原始内容
+        originalTitle = title;
+        originalContent = content;
         
         // 设置现有的笔记内容
         etTitle.setText(title);
@@ -58,6 +64,30 @@ public class NoteEditActivity extends AppCompatActivity {
             finish();
         } else {
             Toast.makeText(this, "保存失败", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // 检查内容是否被修改
+    private boolean isContentModified() {
+        String currentTitle = etTitle.getText().toString().trim();
+        String currentContent = etContent.getText().toString().trim();
+        return !currentTitle.equals(originalTitle) || !currentContent.equals(originalContent);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (isContentModified()) {
+            // 内容被修改，显示保存提示
+            new androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle("保存笔记")
+                    .setMessage("笔记内容已修改，是否保存？")
+                    .setPositiveButton("保存", (dialog, which) -> saveNote())
+                    .setNegativeButton("不保存", (dialog, which) -> finish())
+                    .setNeutralButton("取消", null)
+                    .show();
+        } else {
+            // 内容未修改，直接返回
+            super.onBackPressed();
         }
     }
 } 
