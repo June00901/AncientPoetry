@@ -114,7 +114,7 @@
             android:id="@+id/btn_ai_search"
             android:layout_width="match_parent"
             android:layout_height="52dp"
-            android:text="AI深度联网搜索"
+            android:text="联网深度搜索"
             android:textSize="16sp"
             android:background="@drawable/ai_button_secondary"
             android:textColor="#FFFFFF"

@@ -83,7 +83,7 @@
 
         <activity
             android:name=".AiOnlineSearchActivity"
-            android:label="AI深度联网搜索"
+            android:label="联网深度搜索"
             android:theme="@style/AppTheme"
             android:parentActivityName=".MainActivity"/>
 

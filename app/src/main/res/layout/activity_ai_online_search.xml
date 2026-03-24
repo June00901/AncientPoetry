@@ -31,7 +31,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="AI深度联网搜索"
+            android:text="联网深度搜索"
             android:textSize="28sp"
             android:textStyle="bold"
             android:textColor="#357ABD"
@@ -92,7 +92,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="忘记诗名？描述内容或意境，AI帮你找"
+                android:text="忘记诗名？描述内容或意境，帮你找"
                 android:textSize="12sp"
                 android:textColor="#757575"
                 android:fontFamily="@font/kaiti"
@@ -120,6 +120,76 @@
             android:background="@drawable/ai_button_background"
             android:textColor="#FFFFFF"
             android:fontFamily="@font/kaiti"/>
+
+        <!-- 为你推荐古诗 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="20dp"
+            android:padding="12dp"
+            android:background="#FFF8E1">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="✨ 为你推荐"
+                android:textSize="16sp"
+                android:textColor="#FF6F00"
+                android:textStyle="bold"
+                android:fontFamily="@font/kaiti"
+                android:layout_marginBottom="12dp"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tv_recommend_1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="静夜思"
+                    android:textSize="15sp"
+                    android:textColor="#4A90E2"
+                    android:textStyle="bold"
+                    android:fontFamily="@font/kaiti"
+                    android:gravity="center"
+                    android:padding="10dp"
+                    android:background="@drawable/ai_edit_background"
+                    android:layout_marginEnd="8dp"/>
+
+                <TextView
+                    android:id="@+id/tv_recommend_2"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="春晓"
+                    android:textSize="15sp"
+                    android:textColor="#4A90E2"
+                    android:textStyle="bold"
+                    android:fontFamily="@font/kaiti"
+                    android:gravity="center"
+                    android:padding="10dp"
+                    android:background="@drawable/ai_edit_background"
+                    android:layout_marginEnd="8dp"/>
+
+                <TextView
+                    android:id="@+id/tv_recommend_3"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="登鹳雀楼"
+                    android:textSize="15sp"
+                    android:textColor="#4A90E2"
+                    android:textStyle="bold"
+                    android:fontFamily="@font/kaiti"
+                    android:gravity="center"
+                    android:padding="10dp"
+                    android:background="@drawable/ai_edit_background"/>
+            </LinearLayout>
+        </LinearLayout>
     </LinearLayout>
 
     <!-- 结果显示区域 -->

@@ -15,6 +15,8 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import ee.example.ancient.utils.PoemApiClient;
+import java.util.ArrayList;
+import java.util.List;
 
 public class AiOnlineSearchActivity extends AppCompatActivity {
 
@@ -23,8 +25,12 @@ public class AiOnlineSearchActivity extends AppCompatActivity {
     private Button btnSearch;
     private TextView tvResult;
     private ScrollView scrollView;
+    private TextView tvRecommend1;
+    private TextView tvRecommend2;
+    private TextView tvRecommend3;
     private PoemApiClient poemApiClient;
     private Handler mainHandler;
+    private DBHelper dbHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,9 +42,19 @@ public class AiOnlineSearchActivity extends AppCompatActivity {
         btnSearch = findViewById(R.id.btn_search);
         tvResult = findViewById(R.id.tv_result);
         scrollView = findViewById(R.id.scroll_view);
+        tvRecommend1 = findViewById(R.id.tv_recommend_1);
+        tvRecommend2 = findViewById(R.id.tv_recommend_2);
+        tvRecommend3 = findViewById(R.id.tv_recommend_3);
 
         poemApiClient = new PoemApiClient();
         mainHandler = new Handler(Looper.getMainLooper());
+        dbHelper = new DBHelper(this);
+        dbHelper.createDatabase();
+
+        // 设置推荐古诗点击事件
+        setupRecommendClickListeners();
+        // 加载智能推荐
+        loadIntelligentRecommendations();
 
         // 接收从本地搜索传递过来的描述型搜索内容
         Intent intent = getIntent();
@@ -58,12 +74,18 @@ public class AiOnlineSearchActivity extends AppCompatActivity {
                 if (!TextUtils.isEmpty(descQuery)) {
                     // 优先使用描述型查找
                     performDescSearch(descQuery);
+                    // 记录搜索历史
+                    dbHelper.addSearchHistory(descQuery);
                 } else if (!TextUtils.isEmpty(query)) {
                     // 使用普通搜索
                     performAiSearch(query);
+                    // 记录搜索历史
+                    dbHelper.addSearchHistory(query);
                 } else {
                     Toast.makeText(AiOnlineSearchActivity.this, "请输入搜索内容或描述", Toast.LENGTH_SHORT).show();
                 }
+                // 更新推荐
+                loadIntelligentRecommendations();
             }
         });
     }
@@ -172,6 +194,86 @@ public class AiOnlineSearchActivity extends AppCompatActivity {
                 tvResult.setText(partialContent);
             }
         });
+    }
+
+    private void setupRecommendClickListeners() {
+        tvRecommend1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String poemName = tvRecommend1.getText().toString();
+                etSearchQuery.setText(poemName);
+                performAiSearch(poemName);
+                // 记录搜索历史
+                dbHelper.addSearchHistory(poemName);
+            }
+        });
+
+        tvRecommend2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String poemName = tvRecommend2.getText().toString();
+                etSearchQuery.setText(poemName);
+                performAiSearch(poemName);
+                // 记录搜索历史
+                dbHelper.addSearchHistory(poemName);
+            }
+        });
+
+        tvRecommend3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String poemName = tvRecommend3.getText().toString();
+                etSearchQuery.setText(poemName);
+                performAiSearch(poemName);
+                // 记录搜索历史
+                dbHelper.addSearchHistory(poemName);
+            }
+        });
+    }
+
+    private void loadIntelligentRecommendations() {
+        List<String> recommendations = new ArrayList<>();
+        
+        // 1. 从搜索历史获取推荐
+        List<String> recentSearches = dbHelper.getRecentSearchHistory(10);
+        for (String search : recentSearches) {
+            if (search.length() > 1 && !recommendations.contains(search)) {
+                recommendations.add(search);
+                if (recommendations.size() >= 3) break;
+            }
+        }
+        
+        // 2. 从笔记中获取推荐
+        if (recommendations.size() < 3) {
+            List<String> poemsFromNotes = dbHelper.getPoemsFromNotes();
+            for (String poem : poemsFromNotes) {
+                if (poem.length() > 1 && !recommendations.contains(poem)) {
+                    recommendations.add(poem);
+                    if (recommendations.size() >= 3) break;
+                }
+            }
+        }
+        
+        // 3. 如果还不够，使用默认热门诗词
+        List<String> defaultPoems = new ArrayList<>();
+        defaultPoems.add("静夜思");
+        defaultPoems.add("春晓");
+        defaultPoems.add("登鹳雀楼");
+        defaultPoems.add("望庐山瀑布");
+        defaultPoems.add("敕勒歌");
+        defaultPoems.add("赋得古原草送别");
+        
+        for (String poem : defaultPoems) {
+            if (!recommendations.contains(poem)) {
+                recommendations.add(poem);
+                if (recommendations.size() >= 3) break;
+            }
+        }
+        
+        // 更新推荐显示
+        if (recommendations.size() > 0) tvRecommend1.setText(recommendations.get(0));
+        if (recommendations.size() > 1) tvRecommend2.setText(recommendations.get(1));
+        if (recommendations.size() > 2) tvRecommend3.setText(recommendations.get(2));
     }
 
     @Override

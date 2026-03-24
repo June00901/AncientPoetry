@@ -1,6 +1,7 @@
 package ee.example.ancient;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -9,6 +10,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 //功能：另一个SQLite数据库的帮助类。
 //主要功能：
@@ -17,7 +20,7 @@ import java.io.OutputStream;
 
 public class DBHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "ancient_poetry.db";
-    private static final int DATABASE_VERSION = 2;  // 升级版本号，触发onUpgrade
+    private static final int DATABASE_VERSION = 3;  // 升级版本号，触发onUpgrade
     private Context context;
 
     public DBHelper(Context context) {
@@ -43,6 +46,13 @@ public class DBHelper extends SQLiteOpenHelper {
                 "author TEXT," +
                 "content TEXT," +
                 "dynasty TEXT)");
+
+        // 新增：创建搜索历史表
+        db.execSQL("CREATE TABLE IF NOT EXISTS search_history (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "query TEXT," +
+                "search_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
+                ")");
     }
 
     @Override
@@ -55,6 +65,15 @@ public class DBHelper extends SQLiteOpenHelper {
                     "author TEXT," +
                     "content TEXT," +
                     "dynasty TEXT)");
+        }
+        
+        // 如果旧版本小于3，添加搜索历史表
+        if (oldVersion < 3) {
+            db.execSQL("CREATE TABLE IF NOT EXISTS search_history (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    "query TEXT," +
+                    "search_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
+                    ")");
         }
     }
 
@@ -99,5 +118,46 @@ public class DBHelper extends SQLiteOpenHelper {
         myOutput.flush();
         myOutput.close();
         myInput.close();
+    }
+
+    // 搜索历史相关方法
+    public void addSearchHistory(String query) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL("INSERT INTO search_history (query) VALUES (?)", new Object[]{query});
+        db.close();
+    }
+
+    public List<String> getRecentSearchHistory(int limit) {
+        List<String> history = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT query FROM search_history ORDER BY search_time DESC LIMIT ?", new String[]{String.valueOf(limit)});
+        if (cursor.moveToFirst()) {
+            do {
+                history.add(cursor.getString(0));
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        db.close();
+        return history;
+    }
+
+    // 从笔记中提取可能的诗词名称
+    public List<String> getPoemsFromNotes() {
+        List<String> poems = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT title, content FROM note", null);
+        if (cursor.moveToFirst()) {
+            do {
+                String title = cursor.getString(0);
+                String content = cursor.getString(1);
+                // 简单提取可能的诗词名称（这里需要更复杂的逻辑，暂时简化）
+                if (title != null && title.length() > 0) {
+                    poems.add(title);
+                }
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        db.close();
+        return poems;
     }
 }
