@@ -7,8 +7,9 @@
     android:background="@drawable/login_bg"
     android:padding="24dp"
     tools:context=".LoginActivity">
+    <!-- 半透明遮罩层//备份 -->
 
-    <!-- 半透明遮罩层 -->
+
     <View
         android:layout_width="match_parent"
         android:layout_height="match_parent"
