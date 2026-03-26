@@ -17,6 +17,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import ee.example.ancient.model.Collection;
 import ee.example.ancient.model.Note;
@@ -33,11 +35,16 @@ public class PlaceDatabase extends SQLiteOpenHelper {
     private static final String SHIJING_ASSET_FILE = "shijing.json";
     private static final String SOURCE_DEFAULT = "default";
     private static final String SOURCE_SHIJING = "shijing";
+    private static final String SOURCE_TANG = "tang";
+    private static final String SOURCE_SONG = "song";
+    private static final String SOURCE_YUAN = "yuan";
+    private static final ExecutorService IMPORT_EXECUTOR = Executors.newSingleThreadExecutor();
+    private static volatile boolean IMPORT_SCHEDULED = false;
     public static final String POETRY_TABLE = "tb_plave";
     public static final String COLLECTIONS_TABLE = "collections";
     public static final String USERS_TABLE = "users";
     public static final String NOTES_TABLE = "notes";
-    private static final int DATABASE_VERSION = 7; // 升级到版本7，添加更多占位古诗
+    private static final int DATABASE_VERSION = 8; // 升级到版本8，导入唐诗/宋词/元曲资产数据
     private final Context appContext;
 
     public PlaceDatabase(@Nullable Context context, @Nullable String name, @Nullable SQLiteDatabase.CursorFactory factory, int version) {
@@ -47,61 +54,15 @@ public class PlaceDatabase extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        // 创建用户表
-        db.execSQL("CREATE TABLE IF NOT EXISTS " + USERS_TABLE +
-                " (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                "username TEXT, " +
-                "password TEXT)");
-
-        // 添加默认用户（用户名：1，密码：1）
-        ContentValues values = new ContentValues();
-        values.put("username", "1");
-        values.put("password", "1");
-        db.insert(USERS_TABLE, null, values);
-
-        // 创建收藏表
-        db.execSQL("CREATE TABLE IF NOT EXISTS " + COLLECTIONS_TABLE +
-                " (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                "user_id INTEGER, " +
-                "poetry_id TEXT, " +
-                "title TEXT, " +
-                "content TEXT)");
-
-        // 创建笔记表（确保所有列都存在）
-        String createNotesTable = "CREATE TABLE IF NOT EXISTS " + NOTES_TABLE + " ("
-                + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                + "user_id INTEGER,"
-                + "title TEXT,"
-                + "content TEXT,"
-                + "poetry_content TEXT,"
-                + "poetry_translation TEXT,"
-                + "poet_info TEXT,"
-                + "theme TEXT,"
-                + "created_at DATETIME DEFAULT CURRENT_TIMESTAMP,"
-                + "updated_at DATETIME DEFAULT CURRENT_TIMESTAMP"
-                + ")";
-        db.execSQL(createNotesTable);
-
-        // 创建诗词表
-        db.execSQL("CREATE TABLE IF NOT EXISTS " + POETRY_TABLE + " (" +
-                "_id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "name TEXT," +
-                "title TEXT," +
-                "content TEXT," +
-                "pic TEXT," +
-                "theme TEXT," +
-                "translation TEXT," +
-                "poet_info TEXT," +
-                "source TEXT DEFAULT ''" +
-                ")");
+        ensureCoreSchema(db);
 
         addDefaultPoetry(db);
-        importShijingIfNeeded(db);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         Log.d("PlaceDatabase", "升级数据库从版本 " + oldVersion + " 到 " + newVersion);
+        ensureCoreSchema(db);
 
         // 逐版本升级
         if (oldVersion < 3) {
@@ -126,13 +87,115 @@ public class PlaceDatabase extends SQLiteOpenHelper {
             addDefaultPoetry(db);
         }
 
-        importShijingIfNeeded(db);
+        // 大体量诗词数据改为后台导入，避免阻塞前台UI
     }
 
     @Override
     public void onOpen(SQLiteDatabase db) {
         super.onOpen(db);
-        importShijingIfNeeded(db);
+        ensureCoreSchema(db);
+    }
+
+    /**
+     * 后台预热导入（诗经/唐诗/宋词/元曲），避免阻塞前台 UI。
+     * 进程内只会调度一次。
+     */
+    public static void preloadPoetryInBackground(Context context) {
+        if (context == null) {
+            return;
+        }
+        synchronized (PlaceDatabase.class) {
+            if (IMPORT_SCHEDULED) {
+                return;
+            }
+            IMPORT_SCHEDULED = true;
+        }
+
+        final Context appCtx = context.getApplicationContext();
+        IMPORT_EXECUTOR.execute(() -> {
+            PlaceDatabase helper = null;
+            SQLiteDatabase db = null;
+            try {
+                helper = new PlaceDatabase(appCtx, DATABASE_NAME, null, 1);
+                db = helper.getWritableDatabase();
+                helper.ensureCoreSchema(db);
+                helper.importShijingIfNeeded(db);
+                helper.importAdditionalPoetryIfNeeded(db);
+                Log.d("PlaceDatabase", "后台导入任务执行完成");
+            } catch (Exception e) {
+                Log.e("PlaceDatabase", "后台导入任务失败", e);
+            } finally {
+                try {
+                    if (db != null && db.isOpen()) {
+                        db.close();
+                    }
+                    if (helper != null) {
+                        helper.close();
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+        });
+    }
+
+    /**
+     * 核心表结构自愈：即使数据库文件异常存在，也保证关键表可用。
+     */
+    private void ensureCoreSchema(SQLiteDatabase db) {
+        db.execSQL("CREATE TABLE IF NOT EXISTS " + USERS_TABLE +
+                " (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "username TEXT, " +
+                "password TEXT)");
+
+        db.execSQL("CREATE TABLE IF NOT EXISTS " + COLLECTIONS_TABLE +
+                " (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "user_id INTEGER, " +
+                "poetry_id TEXT, " +
+                "title TEXT, " +
+                "content TEXT)");
+
+        String createNotesTable = "CREATE TABLE IF NOT EXISTS " + NOTES_TABLE + " ("
+                + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + "user_id INTEGER,"
+                + "title TEXT,"
+                + "content TEXT,"
+                + "poetry_content TEXT,"
+                + "poetry_translation TEXT,"
+                + "poet_info TEXT,"
+                + "theme TEXT,"
+                + "created_at DATETIME DEFAULT CURRENT_TIMESTAMP,"
+                + "updated_at DATETIME DEFAULT CURRENT_TIMESTAMP"
+                + ")";
+        db.execSQL(createNotesTable);
+
+        db.execSQL("CREATE TABLE IF NOT EXISTS " + POETRY_TABLE + " (" +
+                "_id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "name TEXT," +
+                "title TEXT," +
+                "content TEXT," +
+                "pic TEXT," +
+                "theme TEXT," +
+                "translation TEXT," +
+                "poet_info TEXT," +
+                "source TEXT DEFAULT ''" +
+                ")");
+
+        Cursor cursor = null;
+        try {
+            cursor = db.query(USERS_TABLE, new String[]{"id"}, "username=?", new String[]{"1"}, null, null, null);
+            if (cursor == null || cursor.getCount() == 0) {
+                ContentValues values = new ContentValues();
+                values.put("username", "1");
+                values.put("password", "1");
+                db.insert(USERS_TABLE, null, values);
+            }
+        } catch (Exception e) {
+            Log.e("PlaceDatabase", "初始化默认用户失败", e);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
     }
 
     /**
@@ -857,6 +920,10 @@ public class PlaceDatabase extends SQLiteOpenHelper {
      * 2) 否则从assets/shijing.json导入
      */
     private void importShijingIfNeeded(SQLiteDatabase db) {
+        if (!isTableExists(db, POETRY_TABLE)) {
+            Log.e("PlaceDatabase", "诗词表不存在，跳过诗经导入");
+            return;
+        }
         Cursor cursor = null;
         try {
             cursor = db.rawQuery("SELECT COUNT(*) FROM " + POETRY_TABLE + " WHERE source = ?", new String[]{SOURCE_SHIJING});
@@ -949,18 +1016,216 @@ public class PlaceDatabase extends SQLiteOpenHelper {
         }
     }
 
+    /**
+     * 幂等导入全唐诗/宋词/元曲目录。
+     * 通过source字段判断是否已导入，避免重复写入。
+     */
+    private void importAdditionalPoetryIfNeeded(SQLiteDatabase db) {
+        long startTime = System.currentTimeMillis();
+        Log.d("PlaceDatabase", "开始检查并导入扩展诗词数据（唐诗/宋词/元曲）");
+        importPoetryFromAssetsFolder(db, "poetry/tang", SOURCE_TANG, "唐诗");
+        importPoetryFromAssetsFolder(db, "poetry/song", SOURCE_SONG, "宋词");
+        importPoetryFromAssetsFolder(db, "poetry/yuan", SOURCE_YUAN, "元曲");
+        long cost = System.currentTimeMillis() - startTime;
+        Log.d("PlaceDatabase", "扩展诗词导入检查完成，耗时 " + cost + "ms");
+    }
+
+    private void importPoetryFromAssetsFolder(SQLiteDatabase db, String folderPath, String source, String theme) {
+        if (!isTableExists(db, POETRY_TABLE)) {
+            Log.e("PlaceDatabase", "诗词表不存在，跳过导入: " + source);
+            return;
+        }
+        Cursor cursor = null;
+        int existingCount = 0;
+        try {
+            cursor = db.rawQuery("SELECT COUNT(*) FROM " + POETRY_TABLE + " WHERE source = ?", new String[]{source});
+            if (cursor.moveToFirst()) {
+                existingCount = cursor.getInt(0);
+            }
+            if (existingCount >= getMinimumImportedCount(source)) {
+                return;
+            }
+        } catch (Exception e) {
+            Log.e("PlaceDatabase", "检查 " + source + " 导入状态失败", e);
+            return;
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+
+        if (appContext == null) {
+            return;
+        }
+
+        InputStream inputStream = null;
+        ByteArrayOutputStream outputStream = null;
+        boolean transactionStarted = false;
+        long startTime = System.currentTimeMillis();
+        int importedCount = 0;
+        int processedFiles = 0;
+        int jsonFiles = 0;
+        try {
+            String[] files = appContext.getAssets().list(folderPath);
+            if (files == null || files.length == 0) {
+                return;
+            }
+            for (String fileName : files) {
+                if (fileName.endsWith(".json")) {
+                    jsonFiles++;
+                }
+            }
+            Log.d("PlaceDatabase", "开始导入 " + source + "，目录=" + folderPath + "，json文件数=" + jsonFiles);
+
+            if (existingCount > 0) {
+                db.delete(POETRY_TABLE, "source = ?", new String[]{source});
+                Log.d("PlaceDatabase", source + " 已有部分数据(" + existingCount + ")，先清理后重导");
+            }
+
+            db.beginTransaction();
+            transactionStarted = true;
+
+            for (String fileName : files) {
+                if (!fileName.endsWith(".json")) {
+                    continue;
+                }
+                processedFiles++;
+                String assetPath = folderPath + "/" + fileName;
+                try {
+                    inputStream = appContext.getAssets().open(assetPath);
+                    outputStream = new ByteArrayOutputStream();
+                    byte[] buffer = new byte[4096];
+                    int len;
+                    while ((len = inputStream.read(buffer)) != -1) {
+                        outputStream.write(buffer, 0, len);
+                    }
+                    String json = outputStream.toString("UTF-8").trim();
+                    if (json.isEmpty()) {
+                        continue;
+                    }
+                    if (!json.startsWith("[")) {
+                        Log.d("PlaceDatabase", "跳过非数组JSON文件: " + assetPath);
+                        continue;
+                    }
+                    JSONArray array = new JSONArray(json);
+
+                    for (int i = 0; i < array.length(); i++) {
+                        JSONObject item = array.optJSONObject(i);
+                        if (item == null) {
+                            continue;
+                        }
+
+                        JSONArray paragraphs = item.optJSONArray("paragraphs");
+                        if (paragraphs == null || paragraphs.length() == 0) {
+                            continue;
+                        }
+
+                        String rawTitle = item.optString("title", "").trim();
+                        if (rawTitle.isEmpty()) {
+                            rawTitle = item.optString("rhythmic", "").trim();
+                        }
+                        if (rawTitle.isEmpty()) {
+                            continue;
+                        }
+
+                        String author = item.optString("author", "佚名").trim();
+                        if (author.isEmpty()) {
+                            author = "佚名";
+                        }
+
+                        StringBuilder contentBuilder = new StringBuilder();
+                        for (int j = 0; j < paragraphs.length(); j++) {
+                            if (j > 0) {
+                                contentBuilder.append('\n');
+                            }
+                            contentBuilder.append(paragraphs.optString(j, ""));
+                        }
+
+                        ContentValues values = new ContentValues();
+                        values.put("name", rawTitle);
+                        values.put("title", "《" + rawTitle + "》·" + author);
+                        values.put("content", contentBuilder.toString());
+                        values.put("pic", "p1");
+                        values.put("theme", theme);
+                        values.put("translation", "");
+                        values.put("poet_info", author);
+                        values.put("source", source);
+                        db.insert(POETRY_TABLE, null, values);
+                        importedCount++;
+                    }
+                } catch (Exception fileError) {
+                    Log.e("PlaceDatabase", "导入文件失败，已跳过: " + assetPath, fileError);
+                } finally {
+                    try {
+                        if (inputStream != null) {
+                            inputStream.close();
+                        }
+                        if (outputStream != null) {
+                            outputStream.close();
+                        }
+                    } catch (Exception ignored) {
+                    }
+                    inputStream = null;
+                    outputStream = null;
+                }
+
+                if (processedFiles % 20 == 0 || processedFiles == jsonFiles) {
+                    Log.d("PlaceDatabase", "导入进度 " + source + ": 文件 " + processedFiles + "/" + jsonFiles + "，已写入 " + importedCount + " 条");
+                }
+            }
+
+            db.setTransactionSuccessful();
+            long cost = System.currentTimeMillis() - startTime;
+            Log.d("PlaceDatabase", "导入完成: " + source + "，写入 " + importedCount + " 条，耗时 " + cost + "ms");
+        } catch (Exception e) {
+            Log.e("PlaceDatabase", "导入目录失败: " + folderPath, e);
+        } finally {
+            if (transactionStarted) {
+                db.endTransaction();
+            }
+            try {
+                if (inputStream != null) {
+                    inputStream.close();
+                }
+                if (outputStream != null) {
+                    outputStream.close();
+                }
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
+    private int getMinimumImportedCount(String source) {
+        if (SOURCE_TANG.equals(source)) {
+            return 30000;
+        }
+        if (SOURCE_SONG.equals(source)) {
+            return 10000;
+        }
+        if (SOURCE_YUAN.equals(source)) {
+            return 1000;
+        }
+        return 1;
+    }
+
     // 搜索诗词
     public List<PlaceBean> find(String key) {
+        return find(key, 0);
+    }
+
+    // 搜索诗词（支持limit，limit<=0表示不限制）
+    public List<PlaceBean> find(String key, int limit) {
         List<PlaceBean> list = new ArrayList<>();
-        SQLiteDatabase database = this.getReadableDatabase();
         String safeKey = key == null ? "" : key.trim();
         String selection = safeKey.isEmpty() ? null : "name LIKE ? OR title LIKE ? OR content LIKE ? OR theme LIKE ? OR poet_info LIKE ?";
         String[] selectionArgs = safeKey.isEmpty()
                 ? null
                 : new String[]{"%" + safeKey + "%", "%" + safeKey + "%", "%" + safeKey + "%", "%" + safeKey + "%", "%" + safeKey + "%"};
+        String limitArg = limit > 0 ? String.valueOf(limit) : null;
 
         try {
-            Cursor cursor = database.query(POETRY_TABLE, null, selection, selectionArgs, null, null, null);
+            SQLiteDatabase database = this.getReadableDatabase();
+            Cursor cursor = database.query(POETRY_TABLE, null, selection, selectionArgs, null, null, "_id DESC", limitArg);
 
             if (cursor != null && cursor.moveToFirst()) {
                 do {

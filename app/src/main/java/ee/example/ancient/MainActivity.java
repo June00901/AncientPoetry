@@ -16,6 +16,8 @@ import android.widget.TextView;
 import android.view.WindowManager;
 import android.content.SharedPreferences;
 import android.content.Intent;
+import android.os.Handler;
+import android.os.Looper;
 
 //- 功能：实现应用的主界面。
 //        - 主要功能：
@@ -82,6 +84,10 @@ public class MainActivity extends AppCompatActivity{
         mTabHost.getTabWidget().setShowDividers(LinearLayout.SHOW_DIVIDER_NONE);
 
         getApplicationContext().deleteDatabase("your_database_name.db");
+
+        // 延迟后台预热大体量诗词数据，避免与登录/首屏初始化争用数据库锁
+        new Handler(Looper.getMainLooper()).postDelayed(() ->
+                PlaceDatabase.preloadPoetryInBackground(getApplicationContext()), 3000);
     }
     private TabHost.TabSpec getTabView(int textId, int imgId) {
         String text = getResources().getString(textId);

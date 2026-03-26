@@ -4,6 +4,8 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,9 +13,10 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.SearchView;
-import android.widget.Toast;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -39,6 +42,9 @@ public class TabFragment_Find extends Fragment {
     protected Context mContext;
 
     private PlaceDatabase database;
+    private ExecutorService queryExecutor;
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private int querySeq = 0;
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
@@ -46,6 +52,9 @@ public class TabFragment_Find extends Fragment {
 
         if (getContext() == null || mView == null) {
             return;
+        }
+        if (queryExecutor == null || queryExecutor.isShutdown()) {
+            queryExecutor = Executors.newSingleThreadExecutor();
         }
 
         database = new PlaceDatabase(getContext(), PlaceDatabase.DATABASE_NAME, null, 1);
@@ -187,12 +196,24 @@ public class TabFragment_Find extends Fragment {
     }
 
     private void safeSearchAndBind(String keyword) {
-        if (database == null || adapter == null) {
+        if (database == null || adapter == null || queryExecutor == null || queryExecutor.isShutdown()) {
             return;
         }
         String searchKey = keyword == null ? "" : keyword.trim();
-        List<PlaceBean> list = database.find(searchKey);
-        adapter.setNewData(list);
+        int limit = TextUtils.isEmpty(searchKey) ? 120 : 500;
+        int currentSeq = ++querySeq;
+        queryExecutor.execute(() -> {
+            List<PlaceBean> list = database.find(searchKey, limit);
+            mainHandler.post(() -> {
+                if (!isAdded() || adapter == null) {
+                    return;
+                }
+                if (currentSeq != querySeq) {
+                    return;
+                }
+                adapter.setNewData(list);
+            });
+        });
     }
 
     private void showNoResultDialog(String searchQuery) {
@@ -207,6 +228,15 @@ public class TabFragment_Find extends Fragment {
                 })
                 .setNegativeButton("否", null)
                 .show();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (queryExecutor != null) {
+            queryExecutor.shutdownNow();
+            queryExecutor = null;
+        }
     }
 
 }
